@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+set -euv
+
+SCRIPT_DIR=${0:a:h}
+
+set +e
+kill -9 `pidof mysqld`
+set -e
+
+cd ${SCRIPT_DIR}
+./setup
+
+sleep 1
+pipenv run python server.py
+
+

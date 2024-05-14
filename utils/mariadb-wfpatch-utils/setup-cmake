@@ -1,0 +1,15 @@
+#!/usr/bin/env zsh
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+output=cmake
+
+if [ ! -d ${output} ]; then
+    wget https://github.com/Kitware/CMake/releases/download/v3.19.8/cmake-3.19.8-Linux-x86_64.tar.gz -O ${output}.tar.gz
+
+    mkdir -p ${output} && tar xvf ${output}.tar.gz -C ${output} --strip-components=1
+
+    rm -f ${output}.tar.gz
+fi
+

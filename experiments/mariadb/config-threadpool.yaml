@@ -1,0 +1,40 @@
+database:
+  taskset_start: 1
+  taskset_end: 47
+  taskset_step: 2
+  _iterations:
+    - threadpool_size: 3
+
+benchmark:
+  kill_min: 10
+  taskset_start: 2
+  taskset_end: 46
+  taskset_step: 2
+
+patch:
+  patch_only_active: False
+  single_as_for_each_thread: False
+  _iterations:
+    - time: null
+      global_quiescence: False
+    - time: 5
+      global_quiescence: False
+    - time: 5
+      global_quiescence: True
+    - time: 10
+      global_quiescence: False
+    - time: 10
+      global_quiescence: True
+    - time: 15
+      global_quiescence: False
+    - time: 15
+      global_quiescence: True
+    - time: 20
+      global_quiescence: False
+    - time: 20
+      global_quiescence: True
+    - time: 25
+      global_quiescence: False
+    - time: 25
+      global_quiescence: True
+

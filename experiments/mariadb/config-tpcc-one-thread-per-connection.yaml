@@ -1,0 +1,10 @@
+name: "TPC-C one-thread-per-connectio"
+
+_reference:
+  - "config-common.yaml"
+  - "config-one-thread-per-connection.yaml"
+
+benchmark:
+  name: "tpcc"
+  config: "benchbase-config/10-terminal/benchbase-tpcc-10-config.xml"
+

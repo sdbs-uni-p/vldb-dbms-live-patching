@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+set -u
+
+# DB_BIN_DIR - Database directory containing the binary
+# DB_DATA_DIR - Database directory containing the database (data files)
+#
+# BENCHBASE_DIR - Directory of the compiled BenchBase
+# BENCHMARK - Which benchmark to execute
+# BENCHMARK_CONFIG - The benchmark configuration file
+
+set -e
+cd ${DB_BIN_DIR}
+./bin/mysqld --no-defaults --skip-grant-tables --datadir=${DB_DATA_DIR} &
+db_pid=$!
+# Wait for DB to start
+sleep 5
+
+# Create table
+cd ${DB_BIN_DIR}
+./bin/mysql --host=127.0.0.1 -e "CREATE DATABASE bench"
+
+cd ${BENCHBASE_DIR}
+java -jar benchbase.jar \
+    -b ${BENCHMARK} \
+    -c ${BENCHMARK_CONFIG} \
+    --create=true \
+    --load=true
+set +e
+
+kill ${db_pid}
+# Wait for DB to shutdown
+sleep 3
+kill -9 ${db_pid}
+# Above kill command may fail as DBMS shutdown gracefully, so we terminate this script with exit 0
+exit 0

@@ -1,0 +1,10 @@
+name: "YCSB threadpool"
+
+_reference:
+  - "config-common.yaml"
+  - "config-threadpool-every.yaml"
+
+benchmark:
+  name: "ycsb"
+  config: "benchbase-config/10-terminal/benchbase-ycsb-1200-config.xml"
+

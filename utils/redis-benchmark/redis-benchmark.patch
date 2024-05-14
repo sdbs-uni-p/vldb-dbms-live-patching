@@ -1,0 +1,105 @@
+From ab3ebb34ef5b0b5b743d1870198414d19cf46fe4 Mon Sep 17 00:00:00 2001
+From: Michael Fruth <Michael.Fruth@uni-passau.de>
+Date: Tue, 4 Jul 2023 13:16:47 +0200
+Subject: [PATCH] Redis-Benchmark
+
+---
+ src/redis-benchmark.c | 39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
+
+diff --git a/src/redis-benchmark.c b/src/redis-benchmark.c
+index 4d5f58511..7c27ee5ad 100644
+--- a/src/redis-benchmark.c
++++ b/src/redis-benchmark.c
+@@ -75,6 +75,11 @@
+ #define CLIENT_GET_EVENTLOOP(c) \
+     (c->thread_id >= 0 ? config.threads[c->thread_id]->el : config.el)
+ 
++long long all_total_size = 1000 * 1000 * 1000;
++long* all_counters;
++double* all_latencies;
++double* all_times;
++
+ struct benchmarkThread;
+ struct clusterNode;
+ struct redisConfig;
+@@ -139,7 +144,9 @@ typedef struct _client {
+     size_t stagfree;        /* Number of unused pointers in client->stagptr */
+     size_t written;         /* Bytes of 'obuf' already written */
+     long long start;        /* Start time of a request */
++    double start_own;
+     long long latency;      /* Request latency */
++    double latency_own;
+     int pending;            /* Number of pending requests (replies to consume) */
+     int prefix_pending;     /* If non-zero, number of pending prefix commands. Commands
+                                such as auth and select are prefixed to the pipeline of
+@@ -493,7 +500,14 @@ static void readHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+     /* Calculate latency only for the first read event. This means that the
+      * server already sent the reply and we need to parse it. Parsing overhead
+      * is not part of the latency, so calculate it only once, here. */
+-    if (c->latency < 0) c->latency = ustime()-(c->start);
++    if (c->latency < 0) {
++        struct timespec end_time;
++        clock_gettime(CLOCK_REALTIME, &end_time);
++        c->latency = ustime()-(c->start);
++        
++        double end_own = end_time.tv_sec * 1000. + end_time.tv_nsec / 1000000.;
++        c->latency_own = end_own - c->start_own; 
++    };
+ 
+     if (redisBufferRead(c->context) != REDIS_OK) {
+         fprintf(stderr,"Error: %s\n",c->context->errstr);
+@@ -567,6 +581,9 @@ static void readHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+                 }
+                 int requests_finished = 0;
+                 atomicGetIncr(config.requests_finished, requests_finished, 1);
++                all_latencies[c->thread_id * all_total_size + all_counters[c->thread_id]] = c->latency_own;
++                all_times[c->thread_id * all_total_size + all_counters[c->thread_id]] = c->start_own;
++                all_counters[c->thread_id] += 1;
+                 if (requests_finished < config.requests){
+                         if (config.num_threads == 0) {
+                             hdr_record_value(
+@@ -616,6 +633,11 @@ static void writeHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
+         if (config.cluster_mode && c->staglen > 0) setClusterKeyHashTag(c);
+         atomicGet(config.slots_last_update, c->slots_last_update);
+         c->start = ustime();
++        
++        struct timespec start_time;
++        clock_gettime(CLOCK_REALTIME, &start_time);
++        c->start_own = start_time.tv_sec * 1000. + start_time.tv_nsec / 1000000.;
++
+         c->latency = -1;
+     }
+     const ssize_t buflen = sdslen(c->obuf);
+@@ -1005,6 +1027,10 @@ static void benchmark(const char *title, char *cmd, int len) {
+         CONFIG_LATENCY_HISTOGRAM_INSTANT_MAX_VALUE,  // Maximum value
+         config.precision,  // Number of significant figures
+         &config.current_sec_latency_histogram);  // Pointer to initialise
++    
++    all_latencies = calloc(config.num_threads * all_total_size, sizeof(double));
++    all_times = calloc(config.num_threads * all_total_size, sizeof(double));
++    all_counters = calloc(config.num_threads, sizeof(long));
+ 
+     if (config.num_threads) initBenchmarkThreads();
+ 
+@@ -1016,6 +1042,17 @@ static void benchmark(const char *title, char *cmd, int len) {
+     if (!config.num_threads) aeMain(config.el);
+     else startBenchmarkThreads();
+     config.totlatency = mstime()-config.start;
++    
++    fprintf(stderr, "thread_id,latency_ms,time\n");
++    for (int i = 0; i < config.num_threads; i++) {
++        for (int j = 0; j < all_total_size; j++) {
++            long long idx = i * all_total_size + j;
++            if (all_latencies[idx] == 0 && all_times[idx] == 0) {
++                break;
++            }
++            fprintf(stderr, "%d,%f,%f\n", i, all_latencies[idx], all_times[idx]);
++        }
++    }
+ 
+     showLatencyReport();
+     freeAllClients();
+-- 
+2.30.2
+

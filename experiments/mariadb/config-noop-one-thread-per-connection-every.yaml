@@ -1,0 +1,15 @@
+name: "NoOp one-thread-per-connection"
+
+_reference:
+  - "config-common.yaml"
+  - "config-one-thread-per-connection-every.yaml"
+
+benchbase:
+  jvm_arguments:
+    - "-Dmariadb.logging.disable=true"
+  jvm_heap_size: 140
+
+benchmark:
+  name: "noop"
+  config: "benchbase-config/10-terminal/benchbase-noop-config.xml"
+

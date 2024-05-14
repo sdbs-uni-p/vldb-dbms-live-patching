@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+set -eu
+
+rm -rf lu
+git clone git@github.com:sdbs-uni-p/vldb-dbms-live-patching.git lu
+
+docker build -t patch-crawler .
+
+rm -rf lu
+

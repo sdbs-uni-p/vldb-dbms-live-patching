@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+set -e
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+if [ ! -z $1 ]; then
+    commits=$1
+else
+    echo "Please specify the file containing the commits"
+    exit 1
+fi
+
+if [ ! -d mariadb-server ]; then
+    git clone https://github.com/MariaDB/server.git mariadb-server
+fi
+
+./create-patch-store -c ${commits} -r mariadb-server -p mariadb-source-code-changes --order-start-branch mariadb-10.5.0 --order-end-branch mariadb-10.5.13
+

@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+set -e
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+if [ ! -z $1 ]; then
+    commits=$1
+else
+    echo "Please specify the file containing the commits"
+    exit 1
+fi
+
+if [ ! -d redis-server ]; then
+    git clone https://github.com/redis/redis.git redis-server
+fi
+
+./create-patch-store -c ${commits} -r redis-server -p redis-source-code-changes --order-start-branch 882ca69 --order-end-branch 391aa40
+

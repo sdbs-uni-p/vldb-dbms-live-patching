@@ -1,0 +1,4 @@
+#!/usr/bin/env zsh
+
+docker run --name plot-server -d --ulimit core=0:-1 -p 8787:8787 -e ROOT=TRUE -e USERID=$UID -e PASSWORD=rstudio -v $(pwd):/home/rstudio/plot rocker/rstudio:latest
+

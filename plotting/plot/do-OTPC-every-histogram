@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+
+source INPUT_BASE_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/one-thread-per-connection-every-0.1/one-thread-per-connection-every-0.1.duckdb --output $INPUT_BASE_DIRECTORY/one-thread-per-connection-every-0.1/output --plot plot-every-histogram.R --prefix "OTPC-"
+

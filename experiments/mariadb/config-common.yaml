@@ -1,0 +1,23 @@
+build:
+  dir: "build"
+  git_dir_name: "mariadb"
+  output: "build-output"
+
+data:
+  output: "data-output"
+
+benchbase:
+  jvm_heap_size: null
+  skip_latency_recording: False
+
+benchmark:
+  dir: "benchbase/target/benchbase-mariadb"
+  output: "result"
+
+patch:
+  measure_vma: True
+  logfile_name: "wfpatch_log"
+  skip_patch_file: False
+  patch_group: null
+  apply_all_patches_at_once: True
+

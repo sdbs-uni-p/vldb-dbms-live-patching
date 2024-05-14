@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+set -ue
+
+SCRIPT_DIR=${0:a:h}
+
+cd ${SCRIPT_DIR}
+
+if [ ! -d ${SCRIPT_DIR}/build/server ]; then
+    mkdir -p ${SCRIPT_DIR}/build
+    cd ${SCRIPT_DIR}/build
+
+    git clone https://github.com/MariaDB/server.git
+fi
+
+cd ${SCRIPT_DIR}/build
+ln -s server mariadb
+
+cd mariadb
+git clean -xffd && git submodule foreach --recursive git clean -xffd
+git reset --hard
+git submodule update --init
+
+
+cd ${SCRIPT_DIR}/create-patched-patch-repository
+./create-patch-store -c ${SCRIPT_DIR}/mariadb.commits.success.wfpatch.original -r ../build/mariadb -p git-patches --order-start-branch mariadb-10.5.0 --order-end-branch mariadb-10.5.13
+./original-mariadb-live-patching/setup ${SCRIPT_DIR}/build/mariadb
+
+cd ${SCRIPT_DIR}
+pipenv install
+

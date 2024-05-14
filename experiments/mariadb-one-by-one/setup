@@ -1,0 +1,55 @@
+#!/usr/bin/env zsh
+
+set -euv
+
+SCRIPT_DIR=${0:a:h}
+
+MARIADB_DIR=${SCRIPT_DIR}/build-dir/server
+UTILS_DIR=${SCRIPT_DIR}/mariadb-wfpatch-utils
+REPOSITORY_PATCH_DIR=${SCRIPT_DIR}/create-patched-patch-repository
+CUSTOM_PATCHES_DIR=${SCRIPT_DIR}/mariadb-git-patches
+
+PATCHES_OUTPUT_DIR=${SCRIPT_DIR}/patches
+
+if [ -d ${MARIADB_DIR} ]; then
+    exit 0
+fi
+
+git clone https://github.com/MariaDB/server.git ${MARIADB_DIR}
+
+cd ${MARIADB_DIR}
+git reset --hard
+git clean -xffd
+git checkout mariadb-10.5.0
+
+
+# Prepare repository
+cd ${MARIADB_DIR}
+git branch -a | grep example-print | xargs -r git branch -D
+git checkout -b example-print
+git am ${REPOSITORY_PATCH_DIR}/mariadb-source-code-changes/10.5.0.patch
+
+# Preparation
+git am ${CUSTOM_PATCHES_DIR}/0.patch
+
+for i in `seq 1 9`; do
+  git checkout -b example-print-$i
+  git am ${CUSTOM_PATCHES_DIR}/$i.patch 
+done
+
+# Create git patches
+rm -rf ${PATCHES_OUTPUT_DIR} && mkdir ${PATCHES_OUTPUT_DIR}
+
+cd ${UTILS_DIR}
+for i in `seq 1 9`; do
+    ./build -b ${MARIADB_DIR}/.. -n server -c example-print-$i -o ${PATCHES_OUTPUT_DIR}/$i
+    ./generate-patch -d ${PATCHES_OUTPUT_DIR}/$i
+done
+
+cd ${SCRIPT_DIR}
+PIPENV_NO_INHERIT=1 pipenv install
+
+cd ${PATCHES_OUTPUT_DIR}/1/bin
+rm -rf ${PATCHES_OUTPUT_DIR}/db && mkdir ${PATCHES_OUTPUT_DIR}/db
+./scripts/mysql_install_db --datadir=${PATCHES_OUTPUT_DIR}/db
+

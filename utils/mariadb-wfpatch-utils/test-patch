@@ -1,0 +1,201 @@
+#!/usr/bin/env zsh
+set -e
+SCRIPT_DIR=${0:a:h} 
+
+#####################
+# ARGUMENTS 
+#####################
+
+function show_help {
+    echo ""
+    echo "Usage: Required arguments: -m|--mtr-dir <root-mysqltest-dir> -p|--patch <patch-files-directory> [s|--suite <test-suites>] [--keep-var <keep-var-directory>]
+        -m|--mtr-dir        The root directory of the mysql-test framework in which the mtr script and its unit test files reside.
+        -p|--patch-dir      The path in which the generated patch files reside.
+        -o|--output-dir     The path in which all result files will be stored
+        -s|--suite          The suite name to run. The default is to execute all stable suites. Specify, e.g. innodb, to merely run a particular suite.
+        -t|--threads        The number of threads to be used
+        --keep-var          Keep the var directory created after the execution of mtr script, otherwise the directory will be removed."
+    exit 1
+}
+
+threads=`nproc`
+keep_var=false
+while [[ "$#" -gt 0 ]]; do
+   case $1 in
+   	-m|--mtr-dir) mtr="$2"; echo "-m|--mtr-dir $mtr"; shift ;;
+   	-o|--output-dir) output="$2"; echo "-o|--output-dir $output"; shift ;;
+   	-p|--patch)   patch_dir="$2"; echo "-p|--patch $patch_dir"; shift ;;
+	-s|--suite)   suite="--suite=$2"; echo "-s|--suite $suite"; shift ;;
+    -t|--threads) threads="$2"; echo "-t|--threads $threads"; shift ;;
+	--keep-var) keep_var=true; ;;
+	*) echo "Unknown parameter passed: $1"; show_help ;;
+   esac
+   shift
+done
+
+if [ -z ${mtr} ] || [ ! -d ${mtr} ]; then
+    echo "-m|--mtr-dir doesn't exist: ${mtr}"
+    show_help
+fi
+mtr=`readlink -f ${mtr}`
+
+if [ -z ${output} ] || [ ! -d ${output} ]; then
+    echo "-o|--output-dir doesn't exist: ${output}"
+    show_help
+fi
+output=`readlink -f ${output}`
+
+if [ -z ${patch_dir} ] || [ ! -d ${patch_dir} ]; then
+    echo "-p|--patch-dir doesn't exist: ${patch_dir}"
+    show_help
+fi
+patch_dir=`readlink -f ${patch_dir}`
+patch_files=(${patch_dir}/patch-*.o)
+patch_files="${(j:,:)patch_files};"
+
+echo "Apply patch to the mtr perl script..."
+cd ${mtr}
+set +e
+patch -p1 --forward -r - < ${SCRIPT_DIR}/git-patches-for-test/0001-patch-after-server-startup.patch
+set -e
+
+
+#####################
+# PERFORM TEST
+#####################
+
+function kill_daemons {
+	set +e
+	echo "Killing all mysqld/mariadbd processes..."
+	killall mysqld
+	killall mariadbd
+	sleep 3
+	kill -9 $(pidof mysqld mariadbd)
+	set -e
+}
+
+function remove_var_dir {
+	if ! $keep_var; then
+		rm -rf ${mtr}/var
+	fi
+}
+
+if ls ${output}/MTR_PATCH_* > /dev/null 2>&1; then
+    echo "Check already performed.. Skipping" | tee -a $LOG
+fi
+mtr_base_log=${output}/MTR_PATCH_base.log
+mtr_migrate_local_log=${output}/MTR_PATCH_migrate-local.log
+mtr_migrate_global_log=${output}/MTR_PATCH_migrate-global.log
+mtr_patch_local_log=${output}/MTR_PATCH_patch-local.log
+mtr_patch_global_log=${output}/MTR_PATCH_patch-global.log
+
+function mtr_exec() {
+    ./mtr --parallel ${threads} --force-restart --force --skip-test-list=unstable-tests ${suite}
+}
+
+echo ""
+echo "**********************************************************"
+echo "*** perform tests without any patch..."
+echo "**********************************************************"
+echo ""
+# make sure the patch environment variables are not set
+unset WF
+unset WF_PATCH_QUEUE
+unset WF_GLOBAL
+
+kill_daemons
+mtr_exec 2&>1 | tee ${mtr_base_log}
+kill_daemons
+remove_var_dir
+
+echo ""
+echo "**********************************************************"
+echo "*** perform tests with local quiescence and migration..."
+echo "**********************************************************"
+echo ""
+export WF="" # used in mtr to decide if the kill signal should be sent
+export WF_GLOBAL=0
+
+kill_daemons
+# Trap the SIGRTMIN signal to avoid the termination of script
+# trap -- '' SIGRTMIN
+mtr_exec  2&>1 | tee ${mtr_migrate_local_log}
+kill_daemons
+remove_var_dir
+
+echo ""
+echo "**********************************************************"
+echo "*** perform tests with global quiescence and migration..."
+echo "**********************************************************"
+echo ""
+export WF_GLOBAL=1
+
+kill_daemons
+mtr_exec 2>&1 | tee ${mtr_migrate_global_log}
+kill_daemons
+remove_var_dir
+
+echo ""
+echo "**********************************************************"
+echo "*** perform tests with global quiescence and patch..."
+echo "**********************************************************"
+echo ""
+export WF_GLOBAL=1
+export WF_PATCH_QUEUE=${patch_files}
+
+kill_daemons
+mtr_exec 2>&1 | tee ${mtr_patch_global_log}
+kill_daemons
+remove_var_dir
+
+
+echo ""
+echo "**********************************************************"
+echo "*** perform tests with local quiescence and patch..."
+echo "**********************************************************"
+echo ""
+export WF_GLOBAL=0
+export WF_PATCH_QUEUE=${patch_files}
+
+kill_daemons
+mtr_exec 2>&1 | tee ${mtr_patch_local_log}
+kill_daemons
+remove_var_dir
+
+#####################
+# DETECT FAILED TEST
+#####################
+
+mtr_base_failed=$(grep "\[ fail \]" ${mtr_base_log} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+mtr_migrate_local_failed=$(grep "\[ fail \]" ${mtr_migrate_local_log} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+mtr_migrate_global_failed=$(grep "\[ fail \]" ${mtr_migrate_global_log} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+mtr_patch_local_failed=$(grep "\[ fail \]" ${mtr_patch_local_log} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+mtr_patch_global_failed=$(grep "\[ fail \]" ${mtr_patch_global_log} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+
+count=0
+if ! diff <(echo ${mtr_base_failed} ) <(echo ${mtr_migrate_local_failed} ); then
+    echo "${mtr_base_failed}\n-------\n${mtr_migrate_local_failed}" > ${output}/MTR_PATCH_MIGRATE_LOCAL_DIFF
+else
+	count=$((count + 1))
+fi
+if ! diff <(echo ${mtr_base_failed} ) <(echo ${mtr_migrate_global_failed} ); then
+    echo "${mtr_base_failed}\n-------\n${mtr_migrate_global_failed}" > ${output}/MTR_PATCH_MIGRATE_GLOBAL_DIFF
+else
+	count=$((count + 1))
+fi
+if ! diff <(echo ${mtr_base_failed} ) <(echo ${mtr_patch_local_failed} ); then
+    echo "${mtr_base_failed}\n-------\n${mtr_patch_local_failed}" > ${output}/MTR_PATCH_PATCH_LOCAL_DIFF
+else
+	count=$((count + 1))
+fi
+if ! diff <(echo ${mtr_base_failed} ) <(echo ${mtr_patch_global_failed} ); then
+    echo "${mtr_base_failed}\n-------\n${mtr_patch_global_failed}" > ${output}/MTR_PATCH_PATCH_GLOBAL_DIFF
+else
+	count=$((count + 1))
+fi
+if (( count == 4 )); then
+	touch ${output}/MTR_PATCH_SUCCESS
+fi
+
+echo "<<< The generated log files are stored in $output >>>"
+

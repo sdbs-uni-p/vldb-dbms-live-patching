@@ -1,0 +1,15 @@
+#!/usr/bin/env zsh
+
+set -euv
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+pipenv run python patch-benchmark --load-only --config config-ch-load-data.yaml --commits mariadb.commits.success.wfpatch.perf
+
+# Rename data-outputs
+cd ${SCRIPT_DIR}/data-output
+for i in *-tpcc,chbenchmark; do
+    # ${a%???....} removes tpcc,chbenchmark from the name
+    mv $i ${i%????????????????}chbenchmark
+done

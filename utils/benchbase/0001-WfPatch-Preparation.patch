@@ -1,0 +1,562 @@
+From 208fb482eb22b5f5b22978285e878a42ec73b624 Mon Sep 17 00:00:00 2001
+From: Michael Fruth <Michael.Fruth@uni-passau.de>
+Date: Mon, 6 Dec 2021 12:01:53 +0100
+Subject: [PATCH] WfPatch Preparation
+
+Add functionality to trigger patches and to measure additionaly data.
+---
+ .../java/com/oltpbenchmark/DBWorkload.java    |  37 +++-
+ .../java/com/oltpbenchmark/ThreadBench.java   |   2 +
+ src/main/java/com/oltpbenchmark/WfPatch.java  | 201 ++++++++++++++++++
+ .../java/com/oltpbenchmark/api/Worker.java    |  10 +-
+ .../collectors/DBParameterCollectorGen.java   |  23 +-
+ .../benchmarks/chbenchmark/queries/Q15.java   |  95 +++++----
+ .../com/oltpbenchmark/util/ResultWriter.java  |  26 ++-
+ 7 files changed, 338 insertions(+), 56 deletions(-)
+ create mode 100644 src/main/java/com/oltpbenchmark/WfPatch.java
+
+diff --git a/src/main/java/com/oltpbenchmark/DBWorkload.java b/src/main/java/com/oltpbenchmark/DBWorkload.java
+index 3a7f87aa..38874828 100644
+--- a/src/main/java/com/oltpbenchmark/DBWorkload.java
++++ b/src/main/java/com/oltpbenchmark/DBWorkload.java
+@@ -365,6 +365,7 @@ public class DBWorkload {
+ 
+ 
+                 wrkld.addPhase(i, time, warmup, rate, weights, rateLimited, disabled, serial, timed, activeTerminals, arrival);
++				WfPatch.getInstance().setBenchmarkTimeBounds(time);
+             }
+ 
+             // CHECKING INPUT PHASES
+@@ -458,6 +459,27 @@ public class DBWorkload {
+         // Execute Workload
+         if (isBooleanOptionSet(argsLine, "execute")) {
+             // Bombs away!
++        	if (argsLine.hasOption("patch")) {
++				WfPatch wfpatch = WfPatch.getInstance();
++				
++				if (argsLine.hasOption("patch-time") && argsLine.hasOption("patch-every")) {
++                    LOG.error("--patch-time and --patch-every cannot be set together!");
++                    System.exit(1);
++                }
++                if (argsLine.hasOption("patch-trigger-signal")) {
++                    wfpatch.setTriggerSignal(argsLine.getOptionValue("patch-trigger-signal"));
++                }
++				if (argsLine.hasOption("patch-time")) {
++					wfpatch.setCustomBenchmarkTime(Integer.parseInt(argsLine.getOptionValue("patch-time")));
++				}
++                if (argsLine.hasOption("patch-every")) {
++                    wfpatch.setPatchEveryTime(Double.parseDouble(argsLine.getOptionValue("patch-every")));
++                }
++				
++				String patchApplication = argsLine.getOptionValue("patch");
++				wfpatch.setPatchApplication(patchApplication);
++			}
++        	
+             try {
+                 Results r = runWorkload(benchList, intervalMonitor);
+                 writeOutputs(r, activeTXTypes, argsLine, xmlConfig);
+@@ -487,6 +509,10 @@ public class DBWorkload {
+         options.addOption(null, "clear", true, "Clear all records in the database for this benchmark");
+         options.addOption(null, "load", true, "Load data using the benchmark's data loader");
+         options.addOption(null, "execute", true, "Execute the benchmark workload");
++		options.addOption(null, "patch", true, "Execute patch in the middle of the time");
++		options.addOption(null, "patch-time", true, "After which time should the patch be applied. Default = 1/2 * benchmark time.");
++		options.addOption(null, "patch-every", true, "Patch every X seconds.");
++		options.addOption(null, "patch-trigger-signal", true, "The trigger signal used for triggering patch application.");
+         options.addOption("h", "help", false, "Print this help");
+         options.addOption("s", "sample", true, "Sampling window");
+         options.addOption("im", "interval-monitor", true, "Throughput Monitoring Interval in milliseconds");
+@@ -570,10 +596,19 @@ public class DBWorkload {
+ 
+         int windowSize = Integer.parseInt(argsLine.getOptionValue("s", "5"));
+ 
++        double rawOffset;
+         String rawFileName = baseFileName + ".raw.csv";
+         try (PrintStream ps = new PrintStream(FileUtil.joinPath(outputDirectory, rawFileName))) {
+             LOG.info("Output Raw data into file: {}", rawFileName);
+-            rw.writeRaw(activeTXTypes, ps);
++            rawOffset = rw.writeRaw(activeTXTypes, ps);
++        }
++
++        if (WfPatch.getInstance().isStartedPatch()) {
++            String patchFileName = baseFileName + ".patch.csv";
++            try (PrintStream ps = new PrintStream(FileUtil.joinPath(outputDirectory, patchFileName))) {
++                LOG.info("Output Patch data into file: {}", patchFileName);
++                rw.writePatch(WfPatch.getInstance().getLatencies(), rawOffset, ps);
++            }
+         }
+ 
+         String sampleFileName = baseFileName + ".samples.csv";
+diff --git a/src/main/java/com/oltpbenchmark/ThreadBench.java b/src/main/java/com/oltpbenchmark/ThreadBench.java
+index 2c143a65..7f152c76 100644
+--- a/src/main/java/com/oltpbenchmark/ThreadBench.java
++++ b/src/main/java/com/oltpbenchmark/ThreadBench.java
+@@ -229,6 +229,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
+                                 testState.startCoolDown();
+                                 measureEnd = now;
+                                 LOG.info("{} :: Waiting for all terminals to finish ..", StringUtil.bold("TERMINATE"));
++                                WfPatch.getInstance().recordEnd();
+                             } else if (phase != null) {
+                                 // Reset serial execution parameters.
+                                 if (phase.isLatencyRun()) {
+@@ -278,6 +279,7 @@ public class ThreadBench implements Thread.UncaughtExceptionHandler {
+                 }
+                 start = now;
+                 LOG.info("{} :: Warmup complete, starting measurements.", StringUtil.bold("MEASURE"));
++                WfPatch.getInstance().recordStart();
+                 // measureEnd = measureStart + measureSeconds * 1000000000L;
+ 
+                 // For serial executions, we want to do every query exactly
+diff --git a/src/main/java/com/oltpbenchmark/WfPatch.java b/src/main/java/com/oltpbenchmark/WfPatch.java
+new file mode 100644
+index 00000000..29a1fbda
+--- /dev/null
++++ b/src/main/java/com/oltpbenchmark/WfPatch.java
+@@ -0,0 +1,201 @@
++package com.oltpbenchmark;
++
++import java.io.IOException;
++import java.io.RandomAccessFile;
++import java.io.BufferedReader;
++import java.io.InputStreamReader;
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++
++
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++public class WfPatch {
++
++	private static final Logger LOG = LoggerFactory.getLogger(WfPatch.class);
++
++	private static WfPatch instance;
++
++	public static WfPatch getInstance() {
++		if (instance == null) {
++			instance = new WfPatch();
++		}
++		return instance;
++	}
++
++	private String patchApplication;
++    private String triggerSignal = "1";
++
++	private Integer benchmarkTime;
++	private Double patchEvery;
++
++	private final List<PatchLatency> latencies = new ArrayList<>();
++
++	private boolean startedPatch = false;
++
++    private final RandomAccessFile patchWriter;
++
++	private WfPatch() {
++        try {
++            patchWriter = new RandomAccessFile("/tmp/mariadb-trigger-patch", "rw");
++        } catch (IOException e) {
++            throw new RuntimeException(e);
++        }
++	}
++
++	public void setPatchApplication(final String patchApplication) {
++		this.patchApplication = patchApplication;
++	}
++
++    public void setTriggerSignal(final String signal) {
++        this.triggerSignal = signal;
++    }
++
++	public void setBenchmarkTimeBounds(final int time) {
++        if (this.benchmarkTime != null && this.benchmarkTime != time) {
++			LOG.error("Time is set twice!");
++			System.exit(1);
++		}
++
++		this.benchmarkTime = time;
++	}
++
++    public void setPatchEveryTime(final double every) {
++        this.patchEvery = every;
++    }
++
++	public void setCustomBenchmarkTime(final int time) {
++		this.benchmarkTime = time * 2; // * 2 because startPatchThread calculates "time /2"
++	}
++
++	public void startPatchThread() {
++		if (this.patchApplication == null) {
++            // Patching disabled, do not start it..
++            return;
++		}
++		startedPatch = true;
++
++        if (this.patchEvery != null) {
++		    LOG.info("Starting WfPatch-Thread to patch '" + this.patchApplication + "' every '" + patchEvery + "' Seconds.");
++
++            int iterations = (int) (this.benchmarkTime / patchEvery) - 1;
++            new Thread() {
++                public void run() {
++                    try {
++                        for(int i = 0; i < iterations; i++) {
++                            Thread.sleep((int) (patchEvery * 1000.));
++					        applyPatch();
++                        }
++                    } catch (Exception e) {
++                        e.printStackTrace();
++                        LOG.error("Patch Thread - Excepetion was thrown...");
++                        System.exit(-1);
++                    }
++                }
++
++            }.start();
++            // End patchEvery
++            return;
++        }
++
++		// * 1000 -> convert from s to ms
++		final int patchThreadSleep = (this.benchmarkTime == null ? 0 : (this.benchmarkTime * 1000) / 2);
++
++		LOG.info("Starting WfPatch-Thread to patch '" + this.patchApplication + "'. Sleeping for '"
++				+ patchThreadSleep / 1000 + "' Seconds.");
++
++		new Thread() {
++			public void run() {
++				// Sleep
++				try {
++					Thread.sleep(patchThreadSleep);
++
++					applyPatch();
++				} catch (Exception e) {
++					e.printStackTrace();
++					LOG.error("Patch Thread - Excepetion was thrown...");
++					System.exit(-1);
++				}
++			};
++		}.start();
++	}
++
++	private void applyPatch() throws Exception {
++		// Patch
++		long startNs = System.nanoTime();
++        patchWriter.write(triggerSignal.getBytes());
++		long endNs = System.nanoTime();
++
++		int latencyUs = (int) ((endNs - startNs + 500) / 1000);
++		this.latencies.add(new PatchLatency(patchApplication, startNs, latencyUs));
++	}
++
++    public synchronized void recordStart() {
++        this.startedPatch = true;
++        this.latencies.add(new PatchLatency("<START>", System.nanoTime(), 0));
++
++        startPatchThread();
++    }
++
++    public synchronized void recordEnd() {
++        this.startedPatch = true;
++        this.latencies.add(new PatchLatency("<END>", System.nanoTime(), 0));
++    }
++
++    public synchronized void recordWarmupDone(final int workerId, final long startNs, final long endNs) {
++        this.startedPatch = true;
++		
++        int latencyUs = (int) ((endNs - startNs + 500) / 1000);
++        this.latencies.add(new PatchLatency("<WARMUP-DONE> " + workerId, startNs, latencyUs));
++    }
++
++    public synchronized void recordWarmup(final int workerId, final long startNs, final long endNs) {
++        this.startedPatch = true;
++		
++        int latencyUs = (int) ((endNs - startNs + 500) / 1000);
++        this.latencies.add(new PatchLatency("<WARMUP> " + workerId, startNs, latencyUs));
++    }
++
++    public synchronized void recordDone(final int workerId, final long startNs, final long endNs) {
++        this.startedPatch = true;
++		
++        int latencyUs = (int) ((endNs - startNs + 500) / 1000);
++        this.latencies.add(new PatchLatency("<DONE> " + workerId, startNs, latencyUs));
++    }
++
++	public synchronized List<PatchLatency> getLatencies() {
++		return Collections.unmodifiableList(this.latencies);
++	}
++
++	public boolean isStartedPatch() {
++		return startedPatch;
++	}
++
++	public class PatchLatency {
++		private final String application;
++		private final int latencyUs;
++		private final long startNs;
++
++		public PatchLatency(final String application, final long startNs, final int latencyUs) {
++			this.application = application;
++			this.startNs = startNs;
++			this.latencyUs = latencyUs;
++		}
++
++		public int getLatencyUs() {
++			return latencyUs;
++		}
++
++		public long getStartNs() {
++			return startNs;
++		}
++
++		public String getApplication() {
++			return application;
++		}
++
++	}
++
++}
+diff --git a/src/main/java/com/oltpbenchmark/api/Worker.java b/src/main/java/com/oltpbenchmark/api/Worker.java
+index f1cdf68e..e649fbd8 100644
+--- a/src/main/java/com/oltpbenchmark/api/Worker.java
++++ b/src/main/java/com/oltpbenchmark/api/Worker.java
+@@ -36,6 +36,7 @@ import java.util.Random;
+ import java.util.concurrent.atomic.AtomicInteger;
+ 
+ import static com.oltpbenchmark.types.State.MEASURE;
++import static com.oltpbenchmark.types.State.WARMUP;
+ 
+ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
+     private static final Logger LOG = LoggerFactory.getLogger(Worker.class);
+@@ -278,7 +279,6 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
+                 }
+ 
+                 long start = System.nanoTime();
+-
+                 doWork(configuration.getDatabaseType(), transactionType);
+ 
+                 long end = System.nanoTime();
+@@ -295,7 +295,6 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
+                         // that either started during the warmup phase or ended
+                         // after the timer went off.
+                         Phase postPhase = workloadState.getCurrentPhase();
+-
+                         if (postPhase == null) {
+                             // Need a null check on postPhase since current phase being null is used in WorkloadState
+                             // and ThreadBench as the indication that the benchmark is over. However, there's a race
+@@ -306,11 +305,18 @@ public abstract class Worker<T extends BenchmarkModule> implements Runnable {
+                         if (preState == MEASURE && postPhase.getId() == prePhase.getId()) {
+                             latencies.addLatency(transactionType.getId(), start, end, this.id, prePhase.getId());
+                             intervalRequests.incrementAndGet();
++                        } else if (preState == WARMUP) {
++                            WfPatch.getInstance().recordWarmup(this.id, start, end);
+                         }
+                         if (prePhase.isLatencyRun()) {
+                             workloadState.startColdQuery();
+                         }
+                         break;
++                    case DONE:
++                        if (preState == MEASURE)
++                            WfPatch.getInstance().recordDone(this.id, start, end);
++                        else if (preState == WARMUP)
++                            WfPatch.getInstance().recordWarmupDone(this.id, start, end);
+                     case COLD_QUERY:
+                         // No recording for cold runs, but next time we will since
+                         // it'll be a hot run.
+diff --git a/src/main/java/com/oltpbenchmark/api/collectors/DBParameterCollectorGen.java b/src/main/java/com/oltpbenchmark/api/collectors/DBParameterCollectorGen.java
+index e5be29d0..5cee243b 100644
+--- a/src/main/java/com/oltpbenchmark/api/collectors/DBParameterCollectorGen.java
++++ b/src/main/java/com/oltpbenchmark/api/collectors/DBParameterCollectorGen.java
+@@ -21,17 +21,18 @@ import com.oltpbenchmark.types.DatabaseType;
+ 
+ public class DBParameterCollectorGen {
+     public static DBParameterCollector getCollector(DatabaseType dbType, String dbUrl, String username, String password) {
+-        switch (dbType) {
++        return new DBCollector();
++        //switch (dbType) {
+ 
+-            case MYSQL:
+-            case MARIADB:
+-                return new MySQLCollector(dbUrl, username, password);
+-            case POSTGRES:
+-                return new PostgresCollector(dbUrl, username, password);
+-            case COCKROACHDB:
+-                return new CockroachCollector(dbUrl, username, password);
+-            default:
+-                return new DBCollector();
+-        }
++        //    case MYSQL:
++        //    case MARIADB:
++        //        return new MySQLCollector(dbUrl, username, password);
++        //    case POSTGRES:
++        //        return new PostgresCollector(dbUrl, username, password);
++        //    case COCKROACHDB:
++        //        return new CockroachCollector(dbUrl, username, password);
++        //    default:
++        //        return new DBCollector();
++        //}
+     }
+ }
+diff --git a/src/main/java/com/oltpbenchmark/benchmarks/chbenchmark/queries/Q15.java b/src/main/java/com/oltpbenchmark/benchmarks/chbenchmark/queries/Q15.java
+index eedbf886..3f506303 100644
+--- a/src/main/java/com/oltpbenchmark/benchmarks/chbenchmark/queries/Q15.java
++++ b/src/main/java/com/oltpbenchmark/benchmarks/chbenchmark/queries/Q15.java
+@@ -25,51 +25,66 @@ import java.sql.Statement;
+ 
+ public class Q15 extends GenericQuery {
+ 
+-    public final SQLStmt createview_stmt = new SQLStmt(
+-            "CREATE view revenue0 (supplier_no, total_revenue) AS "
+-                    + "SELECT "
+-                    + "mod((s_w_id * s_i_id),10000) as supplier_no, "
+-                    + "sum(ol_amount) as total_revenue "
+-                    + "FROM "
+-                    + "order_line, stock "
+-                    + "WHERE "
+-                    + "ol_i_id = s_i_id "
+-                    + "AND ol_supply_w_id = s_w_id "
+-                    + "AND ol_delivery_d >= '2007-01-02 00:00:00.000000' "
+-                    + "GROUP BY "
+-                    + "supplier_no"
+-    );
++    //public final SQLStmt createview_stmt = new SQLStmt(
++    //        "CREATE view revenue0 (supplier_no, total_revenue) AS "
++    //                + "SELECT "
++    //                + "mod((s_w_id * s_i_id),10000) as supplier_no, "
++    //                + "sum(ol_amount) as total_revenue "
++    //                + "FROM "
++    //                + "order_line, stock "
++    //                + "WHERE "
++    //                + "ol_i_id = s_i_id "
++    //                + "AND ol_supply_w_id = s_w_id "
++    //                + "AND ol_delivery_d >= '2007-01-02 00:00:00.000000' "
++    //                + "GROUP BY "
++    //                + "supplier_no"
++    //);
+ 
+-    public final SQLStmt query_stmt = new SQLStmt(
+-            "SELECT su_suppkey, "
+-                    + "su_name, "
+-                    + "su_address, "
+-                    + "su_phone, "
+-                    + "total_revenue "
+-                    + "FROM supplier, revenue0 "
+-                    + "WHERE su_suppkey = supplier_no "
+-                    + "AND total_revenue = (select max(total_revenue) from revenue0) "
+-                    + "ORDER BY su_suppkey"
+-    );
++    //public final SQLStmt query_stmt = new SQLStmt(
++    //        "SELECT su_suppkey, "
++    //                + "su_name, "
++    //                + "su_address, "
++    //                + "su_phone, "
++    //                + "total_revenue "
++    //                + "FROM supplier, revenue0 "
++    //                + "WHERE su_suppkey = supplier_no "
++    //                + "AND total_revenue = (select max(total_revenue) from revenue0) "
++    //                + "ORDER BY su_suppkey"
++    //);
++
++    //public final SQLStmt dropview_stmt = new SQLStmt(
++    //        "DROP VIEW revenue0"
++    //);
+ 
+-    public final SQLStmt dropview_stmt = new SQLStmt(
+-            "DROP VIEW revenue0"
+-    );
++    public final SQLStmt query_stmt = new SQLStmt(
++"with revenue0 (supplier_no, total_revenue) as ( "
+++ "    select mod((s_w_id * s_i_id),10000) as supplier_no, "
+++ "    sum(ol_amount) as total_revenue "
+++ "    from order_line, stock "
+++ "    where ol_i_id = s_i_id and ol_supply_w_id = s_w_id "
+++ "        and ol_delivery_d >= '2007-01-02 00:00:00.000000' "
+++ "    group by mod((s_w_id * s_i_id),10000)) "
+++ "select su_suppkey, su_name, su_address, su_phone, total_revenue "
+++ "from supplier, revenue0 "
+++ "where su_suppkey = supplier_no "
+++ "    and total_revenue = (select max(total_revenue) from revenue0) "
+++ "    order by su_suppkey"
++            );
+ 
+     protected SQLStmt get_query() {
+         return query_stmt;
+     }
+ 
+-    public void run(Connection conn) throws SQLException {
+-        // With this query, we have to set up a view before we execute the
+-        // query, then drop it once we're done.
+-        try (Statement stmt = conn.createStatement()) {
+-            try {
+-                stmt.executeUpdate(createview_stmt.getSQL());
+-                super.run(conn);
+-            } finally {
+-                stmt.executeUpdate(dropview_stmt.getSQL());
+-            }
+-        }
+-    }
++    //public void run(Connection conn) throws SQLException {
++    //    // With this query, we have to set up a view before we execute the
++    //    // query, then drop it once we're done.
++    //    try (Statement stmt = conn.createStatement()) {
++    //        try {
++    //            stmt.executeUpdate(createview_stmt.getSQL());
++    //            super.run(conn);
++    //        } finally {
++    //            stmt.executeUpdate(dropview_stmt.getSQL());
++    //        }
++    //    }
++    //}
+ }
+diff --git a/src/main/java/com/oltpbenchmark/util/ResultWriter.java b/src/main/java/com/oltpbenchmark/util/ResultWriter.java
+index ae3aff33..07e1b64f 100644
+--- a/src/main/java/com/oltpbenchmark/util/ResultWriter.java
++++ b/src/main/java/com/oltpbenchmark/util/ResultWriter.java
+@@ -21,6 +21,7 @@ import com.oltpbenchmark.DistributionStatistics;
+ import com.oltpbenchmark.LatencyRecord;
+ import com.oltpbenchmark.Results;
+ import com.oltpbenchmark.ThreadBench;
++import com.oltpbenchmark.WfPatch;
+ import com.oltpbenchmark.api.TransactionType;
+ import com.oltpbenchmark.api.collectors.DBParameterCollector;
+ import com.oltpbenchmark.api.collectors.DBParameterCollectorGen;
+@@ -193,8 +194,7 @@ public class ResultWriter {
+         }
+     }
+ 
+-    public void writeRaw(List<TransactionType> activeTXTypes, PrintStream out) {
+-
++   public double writeRaw(List<TransactionType> activeTXTypes, PrintStream out) {
+         // This is needed because nanTime does not guarantee offset... we
+         // ground it (and round it) to ms from 1970-01-01 like currentTime
+         double x = ((double) System.nanoTime() / (double) 1000000000);
+@@ -225,6 +225,28 @@ public class ResultWriter {
+             };
+             out.println(StringUtil.join(",", row));
+         }
++        return offset;
++    }
++
++    public void writePatch(List<WfPatch.PatchLatency> latencies, double offset, PrintStream out) {
++        // long startNs = latencySamples.get(0).startNs;
++        String[] header = {
++            "Patch Application",
++            "Start Time (microseconds)",
++            "Latency (microseconds)"
++        };
++        out.println(StringUtil.join(",", header));
++        for (WfPatch.PatchLatency s : latencies) {
++            if (s == null)
++                continue;
++            double startUs = ((double) s.getStartNs() / (double) 1000000000);
++            String[] row = {
++                s.getApplication(),
++                String.format("%10.6f", startUs - offset),
++                Integer.toString(s.getLatencyUs())
++            };
++            out.println(StringUtil.join(",", row));
++        }
+     }
+ 
+ 
+-- 
+2.42.0
+

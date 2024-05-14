@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+dir=$1
+./beder-transform-dir $1
+./duckdb-utils/merge-dir $1
+

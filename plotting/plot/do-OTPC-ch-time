@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+
+source INPUT_BASE_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/one-thread-per-connection-ch/one-thread-per-connection-ch.duckdb --output $INPUT_BASE_DIRECTORY/one-thread-per-connection-ch/output --plot plot-OTPC-ch-time.R --prefix "OTPC-"
+

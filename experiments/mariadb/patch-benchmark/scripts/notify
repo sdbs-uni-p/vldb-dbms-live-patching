@@ -1,0 +1,9 @@
+#!/usr/bin/env zsh
+
+set +e
+
+# Command should never produce any error!
+date=`date`
+ssh -o BatchMode=yes -T drogon "echo \"[$date] [`hostname`] ${@}\" >> ~/benchmark.`hostname`"
+set -e
+

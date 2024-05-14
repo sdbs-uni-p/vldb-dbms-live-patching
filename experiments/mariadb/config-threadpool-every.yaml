@@ -1,0 +1,36 @@
+_reference:
+  - "config-threadpool.yaml"
+
+benchbase:
+  skip_latency_recording: True
+
+database:
+  _iterations:
+    - threadpool_size: 3
+    - threadpool_size: 4
+    - threadpool_size: 5
+    - threadpool_size: 6
+    - threadpool_size: 7
+    - threadpool_size: 8
+    - threadpool_size: 9
+    - threadpool_size: 10
+    - threadpool_size: 11
+    - threadpool_size: 12
+    - threadpool_size: 13
+    - threadpool_size: 14
+    - threadpool_size: 15
+    - threadpool_size: 16
+    - threadpool_size: 17
+    - threadpool_size: 18
+    - threadpool_size: 19
+    - threadpool_size: 20
+
+patch:
+  measure_vma: False
+  skip_patch_file: True
+  _iterations:
+    - every: 0.1
+      global_quiescence: False
+    - every: 0.1
+      global_quiescence: True
+

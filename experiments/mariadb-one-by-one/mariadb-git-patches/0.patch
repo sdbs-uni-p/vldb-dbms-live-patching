@@ -1,0 +1,38 @@
+From 0589e580fb8462e03430df1022b2be230992212b Mon Sep 17 00:00:00 2001
+From: Michael Fruth <Michael.Fruth@uni-passau.de>
+Date: Tue, 7 Feb 2023 16:11:55 +0100
+Subject: [PATCH] Added basic modify packet
+
+---
+ sql/sql_parse.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/sql/sql_parse.cc b/sql/sql_parse.cc
+index 6e7c212a0ff..1ad38cc7442 100644
+--- a/sql/sql_parse.cc
++++ b/sql/sql_parse.cc
+@@ -1178,6 +1178,13 @@ static bool wsrep_tables_accessible_when_detached(const TABLE_LIST *tables)
+ #endif /* WITH_WSREP */
+ #ifndef EMBEDDED_LIBRARY
+ 
++
++void modify_packet(char *packet, ulong packet_length) {
++  if (strstr(packet, "SELECT 0") != NULL) {
++    packet[packet_length -1] = '0';
++  }
++}
++
+ /**
+   Read one command from connection and execute it (query or simple command).
+   This function is called in loop from thread function.
+@@ -1277,6 +1284,7 @@ bool do_command(THD *thd)
+   }
+ 
+   packet= (char*) net->read_pos;
++  modify_packet(packet, packet_length);
+   /*
+     'packet_length' contains length of data, as it was stored in packet
+     header. In case of malformed header, my_net_read returns zero.
+-- 
+2.30.2
+

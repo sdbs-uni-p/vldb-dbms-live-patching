@@ -1,0 +1,53 @@
+From c4b5278ed635b11b96e544a9e1d744454c593c37 Mon Sep 17 00:00:00 2001
+From: Michael Fruth <Michael.Fruth@uni-passau.de>
+Date: Wed, 2 Mar 2022 16:40:07 +0100
+Subject: [PATCH] Patch is performed when server is started
+
+---
+ mysql-test-run.pl | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/mysql-test-run.pl b/test-run.pl
+index 0dcdfc0b64c..0a5e3e8533e 100755
+--- a/mysql-test-run.pl
++++ b/mysql-test-run.pl
+@@ -5481,6 +5481,36 @@ sub mysqld_start ($$) {
+   # Remember options used when starting
+   $mysqld->{'started_opts'}= $extra_opts;
+ 
++  if (defined $ENV{WF}) {
++    # Apply patch
++    my $server_pid_to_wfpatch;
++    my $retries= 5;
++    while ($retries > 0) {
++        sleep(1); # Wait server to start
++
++        # Use the PID file. Using proc does not work properly...
++        if (-e $mysqld->value('pid-file'))
++        {
++            $server_pid_to_wfpatch= mtr_fromfile($mysqld->value('pid-file'));
++            last;
++        }
++        $retries--;
++        print "PID file does not exist.. Retries: $retries\n";
++    }
++
++    if (not defined $server_pid_to_wfpatch)
++    { 
++        # +1 because otherwise it has the wrong PID somehow...
++        $server_pid_to_wfpatch= $mysqld->{'proc'}->pid() + 1;
++    }
++
++    print "Patching $server_pid_to_wfpatch\n";
++    system "kill -34 $server_pid_to_wfpatch";
++
++    sleep(1); # Wait until patch applied
++    print "Patching $server_pid_to_wfpatch done\n";
++  }
++
+   return;
+ }
+ 
+-- 
+2.30.2
+

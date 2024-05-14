@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+set -u
+
+SCRIPT_DIR=${0:a:h}
+
+benchmark="tpcc"
+
+cd ${SCRIPT_DIR}
+exec ./exec ${benchmark} config-${benchmark}-threadpool-comparison.yaml commits.COMPARISON
+

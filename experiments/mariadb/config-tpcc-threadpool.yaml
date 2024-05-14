@@ -1,0 +1,10 @@
+name: "TPC-C threadpool"
+
+_reference:
+  - "config-common.yaml"
+  - "config-threadpool.yaml"
+
+benchmark:
+  name: "tpcc"
+  config: "benchbase-config/10-terminal/benchbase-tpcc-10-config.xml"
+

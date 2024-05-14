@@ -1,0 +1,9 @@
+#!/usr/bin/env zsh
+set -eu
+
+# Enable tracing of events
+sudo su -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
+
+# Needed for tracing: --cap-add=SYS_PTRACE --privileged
+# Make crawling a little faster: --tmpfs /tmp
+docker run --cap-add=SYS_PTRACE --privileged --tmpfs /tmp -it -d --name wfpatch-patch-crawler patch-crawler

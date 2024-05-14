@@ -1,0 +1,65 @@
+#!/usr/bin/env zsh
+set -euv
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+# Setup
+if [ ! -d redis ]; then
+    git clone https://github.com/redis/redis.git
+    cd redis
+    git checkout 391aa40
+
+    git am ${SCRIPT_DIR}/redis.patch
+
+    make -j
+fi
+
+
+sudo cpupower frequency-set -g performance
+
+qps=4500
+for action_after_sleep in `seq 1 200`; do
+    for method in 0 5 6; do
+        queries=$((qps*(action_after_sleep+10)))
+
+        sudo sh -c "sync && echo 3 > /proc/sys/vm/drop_caches"
+    
+        set +e
+        kill -9 `pidof "./redis-server *:6379"`
+        set -e
+        sleep 1
+    
+        RESULT_DIR=${SCRIPT_DIR}/result-${method}-${action_after_sleep}
+        mkdir -p ${RESULT_DIR}
+        touch ${RESULT_DIR}/wfpatch_log
+        touch ${RESULT_DIR}/wfpatch_log.csv
+        cd ${SCRIPT_DIR}/redis/src
+        
+        WF_MEASURE_PTE=1 WF_GLOBAL=0 WF_LOGFILE=${RESULT_DIR}/wfpatch_log WF_PATCH_TRIGGER_FIFO=/tmp/trigger-redis taskset -c 1-47:2 ./redis-server --save "" --appendonly no --unixsocket /tmp/redis.sock &
+        server_pid=$!
+        
+        sleep 2
+        taskset -c 1-47:2 ./redis-benchmark --csv -t set -n $queries -r 1000000000 -d 409600 -c 10 --threads 10 -s /tmp/redis.sock 2> ${RESULT_DIR}/latencies.csv &
+        benchmark_pid=$!
+        
+       sleep $action_after_sleep
+       echo ${method} > /tmp/trigger-redis
+        
+        tail --pid=$benchmark_pid -f /dev/null
+        sleep 1
+        
+        # Write result
+        echo 7 > /tmp/trigger-redis
+    
+        sleep 1
+        
+        set +e 
+        kill -2 $server_pid
+        set -e
+        sleep 30 # It takes some time until all main memory is deleted
+    done
+done
+
+sudo cpupower frequency-set -g schedutil
+

@@ -1,0 +1,67 @@
+#!/usr/bin/env zsh
+
+set -uv
+
+SCRIPT_DIR=${0:a:h}
+
+cd ${SCRIPT_DIR}
+
+if [ ! -d build-dir ]; then
+    mkdir -p build-dir
+    # Create Redis repository
+    ./create-patched-patch-repository/redis ${SCRIPT_DIR}/redis.wfpatch.success.original
+    # Move repository to build dir
+    mv create-patched-patch-repository/redis-server build-dir/redis
+fi
+
+cd ${SCRIPT_DIR}
+mkdir -p output
+
+while IFS= read -r line
+do
+    if [ -d ${SCRIPT_DIR}/output-benchmark/$line ]; then
+        continue
+    fi
+
+    cd ${SCRIPT_DIR}
+    redis-wfpatch-utils/build -b build-dir -n redis -c $line -o output/$line
+    cd ${SCRIPT_DIR}
+    redis-wfpatch-utils/generate-patch -d output/$line
+
+    mkdir -p ${SCRIPT_DIR}/output-benchmark/$line
+    patch_queue=""
+    for patch_file in `ls ${SCRIPT_DIR}/output/$line/patch--*`; do
+        patch_queue+="${patch_file},"
+        cp $patch_file ${SCRIPT_DIR}/output-benchmark/$line/
+    done
+    patch_queue=${patch_queue%?}
+    
+    cd ${SCRIPT_DIR}
+    for quiescence in 0 1; do
+        logfile=${SCRIPT_DIR}/output-benchmark/$line/wf_log_$quiescence
+        touch $logfile
+        
+        WF_PATCH_QUEUE=${patch_queue} WF_GLOBAL=${quiescence} WF_PATCH_TRIGGER_FIFO=/tmp/trigger-redis WF_LOGFILE=${logfile} taskset -c 1-47:2 ./output/$line/build/src/redis-server --save "" --appendonly no &
+        server_pid=$!
+
+        sleep 2
+
+        taskset -c 1-47:2 timeout 10 ./output/$line/build/src/redis-benchmark --csv -t get -n 800000 -c 10 --threads 10 &
+        benchmark_pid=$!
+
+        sleep 2
+        timeout 15s bash -c "echo 1 > /tmp/trigger-redis"
+
+        tail --pid=$benchmark_pid -f /dev/null
+        sleep 1
+
+        kill -2 $server_pid
+        sleep 3
+        kill -9 $server_pid
+        kill -9 $benchmark_pid
+        sleep 1
+    done
+    # We need to save memory... Delete compilations once we finished our benchmark
+    rm -rf ${SCRIPT_DIR}/output/$line
+done < ${SCRIPT_DIR}/redis.wfpatch.success
+

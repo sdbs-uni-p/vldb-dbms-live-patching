@@ -1,0 +1,20 @@
+#!/usr/bin/env zsh
+
+set -e
+
+SCRIPT_DIR=${0:a:h}
+
+cd ${SCRIPT_DIR}
+
+git clone https://github.com/redis/redis.git
+cd redis
+git checkout 391aa40
+
+git am ../redis-benchmark.patch
+
+make -j
+
+mv src/redis-benchmark ..
+cd ..
+rm -rf redis
+

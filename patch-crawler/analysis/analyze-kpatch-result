@@ -1,0 +1,37 @@
+#!/usr/bin/env zsh
+
+patches_dir=$1
+if [ -z ${patches_dir} ] || [ ! -d ${patches_dir} ]; then
+    echo "Please specify the directory containing the patches subdirectory!"
+    exit 1
+fi
+
+output_file=commits.analysis
+if [ -f ${output_file} ] || [ -d ${output_file} ]; then
+    echo "The output file ${output_file} already exists or is a directory!"
+    exit 1
+fi
+
+touch ${output_file}
+
+string_lookup="INFO:root:[KP-DIFF] Patch Creation:"
+
+for file in ${patches_dir}/**; do
+    commit_hash=`basename $file`
+    echo $commit_hash # print out to see processing.. 
+    # create-patch file does not exist! 
+    if [ ! -f ${file}/create-patch ]; then
+        echo "${commit_hash} | -" >> ${output_file}
+        continue
+    fi
+     
+    # Count number of patches 
+    num_patches=`find ${file} -maxdepth 1 -name "patch--*" | wc -l`
+
+    line=`grep -F ${string_lookup} ${file}/create-patch`
+    line=${line#"$string_lookup"} # Strip prefix (string_look)
+    line=`echo ${line} | xargs` # Strip whitespaces
+
+    echo "${commit_hash} | ${num_patches} | ${line}" >> ${output_file}
+done
+

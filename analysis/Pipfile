@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pandas = "*"
+pyyaml = "*"
+pip = "*"
+xmltodict = "*"
+pyelftools = {git = "https://github.com/eliben/pyelftools.git"}
+duckdb = "*"
+sqlparse = "*"
+numpy = "*"
+
+[dev-packages]
+black = "*"
+flake8 = "*"
+mypy = "*"
+isort = "*"
+pycln = "*"
+
+[requires]
+python_version = "3.10"

@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+
+set -e
+
+SCRIPT_DIR=${0:a:h}
+
+cd ${SCRIPT_DIR}
+rm -f commits.success
+rm -f commits.partial
+rm -f commits.analysis
+

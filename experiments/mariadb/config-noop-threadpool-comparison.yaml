@@ -1,0 +1,24 @@
+name: "NoOp threadpool"
+
+_repeat: 100
+_reference:
+  - "config-common.yaml"
+  - "config-threadpool.yaml"
+
+benchbase:
+  jvm_arguments:
+    - "-Dmariadb.logging.disable=true"
+  jvm_heap_size: 140
+
+
+benchmark:
+  name: "noop"
+  config: "benchbase-config/10-terminal/benchbase-noop-config.xml"
+
+patch:
+  measure_vma: False
+  skip_patch_file: True
+  global_quiescence: True
+  _iterations:
+    - every: 1
+

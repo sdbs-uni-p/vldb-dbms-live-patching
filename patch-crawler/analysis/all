@@ -1,0 +1,21 @@
+#!/usr/bin/env zsh
+
+SCRIPT_DIR=${0:a:h}
+
+patches_dir=$1
+if [ -z ${patches_dir} ] || [ ! -d ${patches_dir} ]; then
+    echo "Please specify the directory containing the patches subdirectory!"
+    exit 1
+fi
+
+cd ${SCRIPT_DIR}
+./clean
+
+cd ${SCRIPT_DIR}
+./analyze-kpatch-result ${patches_dir}
+
+cd ${SCRIPT_DIR}
+./partial-success-patch-list ${patches_dir}
+
+cd ${SCRIPT_DIR}
+./success-patch-list ${patches_dir}

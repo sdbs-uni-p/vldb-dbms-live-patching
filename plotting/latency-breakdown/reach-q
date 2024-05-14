@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+source INPUT_BASE_DIRECTORY
+
+echo "MariaDB one-thread-per-connection"
+./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/one-thread-per-connection/one-thread-per-connection.duckdb -s "`cat ${SCRIPT_DIR}/reach-q.sql`"
+
+echo "MariaDB one-thread-per-connection (CH benCHmark)"
+./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/one-thread-per-connection-ch/one-thread-per-connection-ch.duckdb -s "`cat ${SCRIPT_DIR}/reach-q.sql`"
+
+echo "MariaDB threadpool"
+./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/threadpool/threadpool.duckdb -s "`cat ${SCRIPT_DIR}/reach-q.sql`"

@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+set -u
+
+SCRIPT_DIR=${0:a:h}
+
+benchmark="ycsb"
+
+cd ${SCRIPT_DIR}
+exec ./exec ${benchmark} config-${benchmark}-threadpool-every.yaml
+

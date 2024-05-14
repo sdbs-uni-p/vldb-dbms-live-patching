@@ -1,0 +1,15 @@
+name: "CH one-thread-per-connectio"
+
+_reference:
+  - "config-common.yaml"
+  - "config-one-thread-per-connection.yaml"
+
+database:
+  flags:
+    - "--innodb-lock-wait-timeout=600"
+
+benchmark:
+  output_name: "chbenchmark"
+  name: "tpcc,chbenchmark"
+  config: "benchbase-config/10-terminal/benchbase-ch-10-load-config.xml"
+

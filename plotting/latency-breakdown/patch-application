@@ -1,0 +1,16 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+source INPUT_BASE_DIRECTORY
+
+echo "Redis"
+./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/redis-all-patches-load/redis-all-patches-load-beder.duckdb -s "`cat ${SCRIPT_DIR}/patch-application.sql`"
+
+echo "MariaDB one-thread-per-connection"
+./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/one-thread-per-connection-all-patches-load/one-thread-per-connection-all-patches-load.duckdb -s "`cat ${SCRIPT_DIR}/patch-application.sql`"
+
+echo "MariaDB threadpool"
+./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/threadpool-all-patches-load/threadpool-all-patches-load.duckdb -s "`cat ${SCRIPT_DIR}/patch-application.sql`"

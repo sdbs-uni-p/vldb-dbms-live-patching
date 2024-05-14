@@ -1,0 +1,52 @@
+From 9feb06ad3d9e78afa7e3da9238198989182b4284 Mon Sep 17 00:00:00 2001
+From: Michael Fruth <Michael.Fruth@uni-passau.de>
+Date: Wed, 26 Jul 2023 13:37:36 +0200
+Subject: [PATCH] Adjsut syscalls to MMView Kernel
+
+---
+ wf-userland/wf-userland.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/wf-userland/wf-userland.c b/wf-userland/wf-userland.c
+index 0fd0de417f1..7abf36a0976 100644
+--- a/wf-userland/wf-userland.c
++++ b/wf-userland/wf-userland.c
+@@ -74,7 +74,7 @@ int wf_kernel_pin(void* start, void* end) {
+     uintptr_t start_page = (uintptr_t)addr_to_page(start);
+     uintptr_t end_page   = (uintptr_t)addr_to_page(end + pagesize - 1);
+ 
+-    int rc = syscall(1002, start_page, end_page - start_page);
++    int rc = syscall(1000, 4, start_page, end_page - start_page);
+     log("memory pin [%p:+0x%lx]: rc=%d\n", (void*)start_page,
+         end_page - start_page, rc);
+     if (rc == -1)
+@@ -84,7 +84,7 @@ int wf_kernel_pin(void* start, void* end) {
+ }
+ 
+ int wf_kernel_as_new(void) {
+-    int rc = syscall(1000);
++    int rc = syscall(1000, 0);
+     // log("AS create: %d\n", rc);
+     if (rc == -1)
+         die_perror("wf_kernel_as_new", "Could not create a new address space");
+@@ -92,7 +92,7 @@ int wf_kernel_as_new(void) {
+ }
+ 
+ int wf_kernel_as_switch(int as_id) {
+-    int rc = syscall(1001, as_id);
++    int rc = syscall(1000, 3, as_id);
+     // log("AS switch: %d %d\n", as_id, rc);
+     if (rc == -1)
+         die_perror("wf_kernel_as_switch", "Could not migrate to the new address space");
+@@ -100,7 +100,7 @@ int wf_kernel_as_switch(int as_id) {
+ }
+ 
+ int wf_kernel_as_delete(int as_id) {
+-    int rc = syscall(1003, as_id);
++    int rc = syscall(1000, 1, as_id);
+     // log("address space delete(%d)=%d\n", as_id, rc);
+     return rc;
+ }
+-- 
+2.40.1
+

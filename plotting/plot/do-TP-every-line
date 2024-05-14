@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+
+source INPUT_BASE_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/threadpool-every-0.1/threadpool-every-0.1.duckdb --output $INPUT_BASE_DIRECTORY/threadpool-every-0.1/output --plot plot-TP-every-line.R --prefix "TP-"
+

@@ -1,0 +1,26 @@
+name: "CH one-thread-per-connectio"
+
+_reference:
+  - "config-common.yaml"
+  - "config-one-thread-per-connection.yaml"
+
+database:
+  flags:
+    - "--innodb-lock-wait-timeout=1800"
+
+benchmark:
+  kill_min: 240
+  name: "chbenchmark"
+  config: "benchbase-config/10-terminal/benchbase-ch-10-config.xml"
+
+patch:
+  patch_only_active: False
+  single_as_for_each_thread: False
+  _iterations:
+    - time: null
+      global_quiescence: False
+    - time: 300
+      global_quiescence: False
+    - time: 300
+      global_quiescence: True
+

@@ -1,0 +1,6 @@
+[submodule "wfpatch-userland"]
+	path = wfpatch-userland
+	url = git@git.fim.uni-passau.de:sdbs/research/patch/wfpatch-userland.git
+[submodule "kpatch"]
+	path = kpatch
+	url = git@git.fim.uni-passau.de:sdbs/research/patch/kpatch.git

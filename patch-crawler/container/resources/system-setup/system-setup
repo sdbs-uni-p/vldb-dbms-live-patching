@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+for i in ${SCRIPT_DIR}/system-setup.d/*; do
+    echo "Setting up ${i}"
+    ${i}
+done

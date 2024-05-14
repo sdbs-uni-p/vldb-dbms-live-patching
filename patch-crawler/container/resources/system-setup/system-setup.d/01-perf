@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -eu
+
+sudo apt-get install -y --no-install-recommends\
+    flex \
+    libunwind-dev \
+    libbabeltrace-dev \
+    libpfm4-dev \
+    libtraceevent-dev \
+    libzstd-dev \
+    libdw-dev \
+    libbfd-dev \
+    libcap-dev \
+    libperl-dev \
+    python3-dev \
+    systemtap-sdt-dev
+
+kernel_version=$(uname -r | cut -d '-' -f 1 | cut -d '.' -f 1,2)
+
+sudo git clone --depth 1 --branch v${kernel_version} https://github.com/torvalds/linux.git /root/linux
+sudo make -C /root/linux/tools/perf
+
+sudo cp /root/linux/tools/perf/perf /usr/bin/perf_${kernel_version}
+
+sudo ln -sf perf_${kernel_version} /usr/bin/perf

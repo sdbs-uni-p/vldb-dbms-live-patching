@@ -1,0 +1,98 @@
+#!/usr/bin/env zsh
+set -e
+setopt extended_glob
+
+SCRIPT_DIR=${0:a:h}
+
+echo ">>> $0 <<<" | tee -a $LOG
+
+#############
+# ARGUMENTS #
+#############
+function show_help {
+    echo "Missing arguments! Arguments:
+    -d|--dir                    The directory containing the build and build-new directory. Patches will be stored inside this directory.
+    " | tee -a $LOG
+    exit 1
+}
+
+keep_var=false
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -d|--dir) dir="$2"; echo "-d|--dir $dir" | tee -a $LOG; shift ;;
+        --keep-var) keep_var=true; ;;
+        *) echo "Unknown parameter passed: $1"; show_help ;;
+    esac
+    shift
+done
+
+if [ -z ${dir} ]; then
+    show_help
+fi
+
+if [ ! -d ${dir} ]; then
+    echo "-d|--dir doesn't exist: ${dir}" | tee -a $LOG
+    show_help
+fi
+dir=`readlink -f ${dir}`
+
+echo "Checking tests for ${dir}" | tee -a $LOG
+#############
+# CONSTANTS #
+#############
+old=${dir}/bin/mysql-test
+new=${dir}/bin-new/mysql-test
+
+if [ ! -d ${old} ] || [ ! -d ${new} ]; then
+    echo "Cannot find directory
+    Old: ${old}
+    or
+    New: ${new}
+    Have you build the directory with the './build ... --install-new' flag?
+    " | tee -a $LOG
+    exit 1
+fi
+
+if ls ${dir}/MTR_OLD-NEW_* > /dev/null 2>&1; then
+    echo "Check already performed.. Skipping" | tee -a $LOG
+    exit 0
+fi
+
+old_mtr_output=${dir}/MTR_OLD-NEW_build
+new_mtr_output=${dir}/MTR_OLD-NEW_build-new
+
+function mtr_cmd() {
+    ./mtr --parallel=`nproc` --mem --force-restart --force --skip-test-list=unstable-tests 2>&1
+}
+
+cd ${old}
+echo "Checking old version: ${old}" | tee -a $LOG
+mtr_cmd | tee -a ${old_mtr_output}
+if ! $keep_var; then
+    rm -rf var
+fi
+
+cd ${new}
+echo "Checking new version: ${new}" | tee -a $LOG
+mtr_cmd | tee -a ${new_mtr_output}
+if ! $keep_var; then
+    rm -rf var
+fi
+
+# SED:
+# Previous: innodb.restart '8k,innodb'               w72 [ fail ]
+# After SED: innodb.restart '8k,innodb'                  [ fail ]
+# This removes the worker id (w72 in this example)
+old_failed_test=$(grep "\[ fail \]" ${old_mtr_output} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+new_failed_test=$(grep "\[ fail \]" ${new_mtr_output} | sed -E "s/(\w* )(\[ fail \].*)/\2/g" | sort )
+
+if ! diff <(echo ${old_failed_test} ) <(echo ${new_failed_test} ); then
+    echo "${old_failed_test}\n-------\n${new_failed_test}" > ${dir}/MTR_OLD-NEW_FAIL_DIFF
+else
+    if [ -z ${old_failed_test} ]; then
+        touch ${dir}/MTR_OLD-NEW_SUCCESS
+    else
+        echo ${old_failed_test} > ${dir}/MTR_OLD-NEW_FAIL
+    fi
+fi
+

@@ -1,0 +1,34 @@
+From 0fabb21beeb224bd774b18f3c7d5ad74cff4a267 Mon Sep 17 00:00:00 2001
+From: Mojtaba Zali <Mojtaba.Zali@uni-passau.de>
+Date: Fri, 11 Feb 2022 13:26:30 +0100
+Subject: [PATCH] Add WfPatch to test mariadbd
+
+---
+ mysql-test/mysql-test-run.pl | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/mysql-test-run.pl b/mysql-test-run.pl
+index 0dcdfc0b64c..6be9c9e8ee5 100755
+--- a/mysql-test-run.pl
++++ b/mysql-test-run.pl
+@@ -1146,6 +1146,17 @@ sub run_worker ($) {
+       }
+       $test->{worker} = $thread_num if $opt_parallel > 1;
+ 
++      if(defined $ENV{WF}) {
++      	if (`pgrep -f mariadbd`) {
++          print "\nmariadbd pid: " . `pgrep -f mariadbd`;
++	  print `pgrep -f mariadbd | xargs kill -34`;
++  	} else {
++	  print "\nmysqld pid: " . `pgrep -f mysqld`;
++	  print `pgrep -f mysqld | xargs kill -34`;
++	}
++	print "\n";
++      }
++
+       run_testcase($test, $server);
+       #$test->{result}= 'MTR_RES_PASSED';
+       # Send it back, now with results set
+-- 
+2.30.2
+

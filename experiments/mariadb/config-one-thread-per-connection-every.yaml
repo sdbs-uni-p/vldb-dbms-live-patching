@@ -1,0 +1,15 @@
+_reference:
+  - "config-one-thread-per-connection.yaml"
+
+benchbase:
+  skip_latency_recording: True
+
+patch:
+  measure_vma: False
+  skip_patch_file: True
+  _iterations:
+    - every: 0.1
+      global_quiescence: False
+    - every: 0.1
+      global_quiescence: True
+

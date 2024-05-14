@@ -1,0 +1,20 @@
+#!/usr/bin/env zsh
+set -ex
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+if [ -d benchbase ]; then
+    exit
+fi
+
+git clone https://github.com/cmu-db/benchbase.git
+cd benchbase
+git checkout 979b53b043f934220f703b149f27a7ee0f992b63
+git am ${SCRIPT_DIR}/0001-WfPatch-Preparation.patch
+./mvnw clean package -DskipTests -P mariadb
+
+cd target
+
+unzip benchbase-mariadb.zip
+

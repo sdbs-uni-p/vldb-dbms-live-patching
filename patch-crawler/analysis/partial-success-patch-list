@@ -1,0 +1,29 @@
+#!/usr/bin/env zsh
+
+patches_dir=$1
+if [ -z ${patches_dir} ] || [ ! -d ${patches_dir} ]; then
+    echo "Please specify the directory containing the patches subdirectory!"
+    exit 1
+fi
+
+output_file=commits.partial
+if [ -f ${output_file} ] || [ -d ${output_file} ]; then
+    echo "The output file ${output_file} already exists or is a directory!"
+    exit 1
+fi
+
+touch ${output_file}
+
+string_lookup="INFO:root:[KP-DIFF] Success (partial)"
+
+for file in ${patches_dir}/**; do
+    commit_hash=`basename $file`
+    if [ ! -f ${file}/create-patch ]; then
+        continue
+    fi
+
+    if grep -qF ${string_lookup} ${file}/create-patch; then
+        echo ${commit_hash} | tee -a ${output_file}
+    fi
+done
+

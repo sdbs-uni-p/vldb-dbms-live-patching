@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+set -u
+
+SCRIPT_DIR=${0:a:h}
+
+benchmark="ch"
+
+cd ${SCRIPT_DIR}
+exec ./exec ${benchmark} config-${benchmark}-one-thread-per-connection.yaml
+

@@ -1,0 +1,15 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+
+cd ${SCRIPT_DIR}/kpatch
+./setup
+
+cd ${SCRIPT_DIR}/mariadb-wfpatch-utils
+./setup-cmake
+
+cd ${SCRIPT_DIR}/benchbase
+./setup
+

@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+set -e
+
+SCRIPT_DIR=${0:a:h}
+
+# This script just wraps all commands of the README.md file
+
+# 1.
+cd ${SCRIPT_DIR}/crawl-redis
+./crawl
+
+cd ${SCRIPT_DIR}/analysis
+./all ../crawl-redis/output/patches
+cp commits.success ~/redis.commits.success
+
+# 2.
+cd ${SCRIPT_DIR}/create-patched-patch-repository
+./redis ~/redis.commits.success
+
+cd redis-server
+git tag -l | grep wfpatch.patch- > ~/redis.commits.success.wfpatch
+cat ~/redis.commits.success.wfpatch | sed 's/^wfpatch\.patch-//' > ~/redis.commits.success.wfpatch.original
+

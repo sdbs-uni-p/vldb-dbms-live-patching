@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+set -e
+
+SCRIPT_DIR=${0:a:h}
+
+parallel=40
+git_clone_name=redis
+
+cd ${SCRIPT_DIR}
+./prepare-build-directories -u https://github.com/redis/redis.git -n ${git_clone_name} -d output/builds -p ${parallel}
+
+# Use static commit file
+# commit_files=("${SCRIPT_DIR}/commits/mariadb-10.5.0-10.5.13")
+
+# Generate commit file dynamically
+commit_file=`mktemp`
+(
+    # Just go into the first git repository; This is created by the create-git script
+    cd ${SCRIPT_DIR}/output/builds/1/${git_clone_name}
+    # 882ca69 = 5.0.0
+    # 391aa40 = 7.0.11
+    git rev-list --no-merges `cat ${SCRIPT_DIR}/commits-to-analyze` > ${commit_file} 
+)
+commit_files=("${commit_file}")
+
+cd ${SCRIPT_DIR}/
+for commit_file in "${commit_files[@]}"; do
+    ./commits-checker -p ${parallel} -t 8 -c ${commit_file} -u ${SCRIPT_DIR}/redis-wfpatch-utils -n ${git_clone_name} --cleanup
+done
+
