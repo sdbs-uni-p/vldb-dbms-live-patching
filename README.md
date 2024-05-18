@@ -2,3 +2,6 @@
 
 > **_NOTE:_** Reproduction package is WIP. A final, stable version should be available around May 26th.
 
+## Supplementary Material
+The directory [supplementary-material](supplementary-material) contains the additional charts referenced in the paper.
+
