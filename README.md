@@ -9,7 +9,7 @@ The directory [supplementary-material](supplementary-material) contains the addi
 
 The following steps describe how to reproduce this research. Each respective directory contains a detailed description of the respective step.
 
-1. Crawl development history for live patches (directory [patch-crawler](patch-crawler)])
+1. Crawl development history for live patches (directory [patch-crawler](patch-crawler))
 2. Perform experiments (directory [experiments](experiments))
 3. Transform experiment data into a DuckDB database (directory [transformation](transformation))
 4. Analyse results and plot charts (directory [plotting](plotting))
