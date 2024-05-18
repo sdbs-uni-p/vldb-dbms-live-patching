@@ -9,6 +9,8 @@ This directory is responsible for crawling patches of the commit history of Mari
 The directory [patch-crawler/container](patch-crawler/container) contains the script to build the Docker image and to run a container. You can either execute `docker-build` first and than `run-container` or you may execute the following commands manually:
 
 ```
+cd container
+
 # 1. Build Docker image:
 docker build -t patch-crawler .
 
