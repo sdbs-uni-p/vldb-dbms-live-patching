@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+
+set -euv
+SCRIPT_DIR=${0:a:h}
+
+echo "GitLab/GitHub Markdown is not able to render pdf. We have to transform all pdfs to pngs"
+
+for pdf in `find . -type f -name \*pdf`; do
+    echo "Converting $pdf"
+    convert -quality 100 -density 500 $pdf $pdf.png
+done
