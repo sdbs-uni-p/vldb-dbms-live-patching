@@ -64,7 +64,7 @@ RUN /tmp/system-setup/system-setup
 RUN rm -rf /tmp/system-setup
 
 COPY --chown=repro:repro resources/dotfiles/* /home/repro/
-COPY --chown=repro:repro lu /home/repro/dbms-live-patching
+RUN git clone https://github.com/sdbs-uni-p/vldb-dbms-live-patching.git dbms-live-patching
 WORKDIR /home/repro/dbms-live-patching
 RUN ./utils/setup
 
