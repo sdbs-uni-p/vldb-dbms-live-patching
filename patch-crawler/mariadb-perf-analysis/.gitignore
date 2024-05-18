@@ -1,0 +1,5 @@
+/db_dir/
+perf.*
+benchbase/
+mariadb-wfpatch-utils/
+perf-data/

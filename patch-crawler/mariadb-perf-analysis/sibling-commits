@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+
+
+for dir in ${SCRIPT_DIR}/perf-data/*; do
+    cd ${dir}
+    
+    commit=`basename ${dir}`
+    sibling_file=`ls | grep SIB- | cat` # | cat to prevent error if no file could be found
+
+    counter=1
+    while true; do
+	res=`echo ${sibling_file} | cut -d- -f$counter`
+	if [ -z "${res}" ]; then
+	    # Abort. No more results
+	    break
+	fi
+	if [ "${res}" = "SIBLING" ] || [ "${res}" = "SIBLING_AND_MORE" ]; then
+	    # Found. Add it to the list
+	    echo $commit
+	    break
+	fi
+		
+	counter=$((counter+1))
+    done
+
+done

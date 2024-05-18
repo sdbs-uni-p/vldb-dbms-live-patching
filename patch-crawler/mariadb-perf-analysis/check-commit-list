@@ -1,0 +1,20 @@
+#!/usr/bin/env zsh
+SCRIPT_DIR=${0:a:h}
+
+list=$1
+
+if [ -z ${list} ] || [ ! -f ${list} ]; then
+    echo "Commit list not given or cannot be found: ${list}":
+    echo "Usage: $0 <commit-list>"
+    exit 1
+fi
+
+cat ${list} | while read line 
+do
+    echo "Processing ${line} ..."
+    ${SCRIPT_DIR}/generate-perf-data -c ${line}
+    pipenv run ${SCRIPT_DIR}/analyze-perf-data -c ${line}
+done
+
+${SCRIPT_DIR}/sibling-commits > ${SCRIPT_DIR}/sibling.commits
+

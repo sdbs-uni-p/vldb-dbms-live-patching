@@ -1,0 +1,336 @@
+#!/usr/bin/env python3
+import os
+import re
+import difflib
+import subprocess
+from pathlib import Path
+from unidiff import PatchSet
+from enum import IntEnum
+
+PERF_FIND_SYMBOLS_CALL="perf script --max-stack 9999 -i {} -S {}"
+
+PATCH_OBJECT_FILE_PREFIX = "patch--"
+SIBLING_RESULT_FILE_PREFIX = "SIB-"
+
+class SiblingStatus(IntEnum):
+    # Function is not executed (cannot be found in the perf.data) at all
+    NOT_EXECUTED = 2
+    # Function is executed only within the call chain of the parent_function
+    SIBLING = 0
+    # As above, but it is also executed in another call chain of another thread
+    SIBLING_AND_MORE = 1
+    # Function is executed but not within the call chain of parent_function
+    NO_SIBLING = 3
+
+
+def funciton_is_sibling_in_perf_data(perf_file, patched_function, parent_function = "do_command") -> SiblingStatus:
+    """ Checks whether 'patched_function' is a sibling in the callstack of a thread which executed 'parent_function' before.
+    The perf data of 'perf_file' is analyized
+
+    returns: 
+    - None: If no trace could be found at all (patched_function is never called)
+    - True: If 'patched_function' is a sibling of 'parent_function'
+    - False: If 'patched_function" is NOT a sibling of 'parent_function'
+    """
+    result = subprocess.run(PERF_FIND_SYMBOLS_CALL.format(perf_file, patched_function),
+       shell = True,
+       stdout=subprocess.PIPE,
+       stderr=subprocess.DEVNULL)
+    function_trace = result.stdout.decode("UTF-8").strip()
+    
+    if len(function_trace) == 0:
+        return SiblingStatus.NOT_EXECUTED
+    
+    # Analyze trace
+    # mysqld 2498244 1469492.048813:     459259 cycles:u:
+    # ....
+	#        7f23d65dbea6 start_thread+0xd6 (/lib/x86_64-linux-gnu/libpthread-2.31.so)
+    #        7f23d61dadee clone+0x3e (inlined)
+    #
+    # mysqld 2498244 1469492.048813:     459259 cycles:u:
+    #        55b02703b81c close_thread_tables+0x44 (/home/michael/mariadb-patch-source-finder/mariadb-wfpatch-utils/output/wfpatch.patch-38c2c16cc4aae4c09910537a53a924f7768726dd/bin-debug/bin/mysqld)
+    # ....
+
+    # Create groups based on the blocks given in the trace (mysqld ... and all lines below)
+    
+    blocks = []
+    current_block = None
+    for line in function_trace.splitlines():
+        if len(line.strip()) == 0:
+            continue
+
+        if line.startswith("mysqld"):
+            if current_block is not None:
+                # New block begins; add previous block to all blocks
+                blocks.append(current_block)
+            current_block = []
+            continue
+        
+        if current_block is not None:
+            current_block.append(line.strip())
+
+    if len(current_block) > 0:
+        blocks.append(current_block)
+    
+    contains_parent_counter = 0
+    for block in blocks:
+        # E.g.: 7f23d65dbea6 start_thread+0xd6 (/lib/x86_64-linux-gnu/libpthread-2.31.so)
+        # We want start_thread+0xd6...
+        function_names = [line.split()[1] for line in block]
+        function_names = [re.sub(r'\+0x[0-9a-f]*$', "", fn) for fn in function_names]
+        if parent_function in function_names:
+            contains_parent_counter += 1
+    
+    if len(blocks) == 0:
+        return SiblingStatusy.NOT_EXECUTED
+    if len(blocks) == contains_parent_counter:
+        # Each block contains the parent function. Good!
+        return SiblingStatus.SIBLING
+    if contains_parent_counter == 0:
+        # parent_function was never executed while this function was executed...
+        return SiblingStatus.NO_SIBLING
+    if len(blocks) > contains_parent_counter:
+        return SiblingStatus.SIBLING_AND_MORE
+    
+    raise ValueError("Invalid state....")
+
+
+def find_plain_patched_object_files(data_directory, patch_file_names):
+    """ Find all compiled object files (old and new) for which a patch was generated.
+    This looks for files in the 'diff-object-files' directory and looks for all files
+    for which a patch was generated.
+    """
+    compiled_object_files_dir = os.path.realpath(os.path.join(data_directory, "diff-object-files"))
+    if not os.path.exists(compiled_object_files_dir):
+        print("'{}' cannot find diff-object-files directory".format(compiled_object_files_dir))
+        exit(1)
+
+    # Key = Filename without .o ending
+    # Value = [2]; [0] = path to old object file, [1] = path to new object file
+    compiled_files = {}
+
+    # old
+    for compiled_object_file in Path(os.path.join(compiled_object_files_dir, "build")).rglob("*.o"):
+        # [:-2] <- remove .o ending
+        name = compiled_object_file.name[:-2]
+
+        if name in compiled_files:
+            # Hm... Filename exists twice, probably in different directories? Exit and wait for user to fix it...
+            print("More than one object file found for file '{}'... Please resolve this issue manually.".format(name))
+            exit(1)
+
+        if name in patch_file_names:
+            compiled_files[name] = [str(compiled_object_file)]
+
+    # new
+    for compiled_object_file in Path(os.path.join(compiled_object_files_dir, "build-new")).rglob("*.o"):
+        # [:-2] <- remove .o ending
+        name = compiled_object_file.name[:-2]
+        if name in patch_file_names:
+
+            if name not in compiled_files:
+                # Hmm.. We found a object file which exists for the new build but not for the new one...
+                print("Object file '{}' exists only in the new version but not for the old one... Please resolve this issue manually.".format(name))
+                exit(1)
+
+            compiled_files[name].append(str(compiled_object_file))
+
+    return compiled_files
+
+
+def extract_function_name_from_signature(signature):
+    """ Extract the function name from a git patch section header.
+    Example: Input 'uchar *Filesort_buffer::alloc_sort_buffer(uint num_records,'
+    Will return 'Filesort_buffer::alloc_sort_buffer'
+    """
+    
+    # 1. Remove everything after '('
+    head = signature.partition("(")[0] # Head, Sep, Tail
+    # 2. Get just function name; Remove return type
+    name = head.split()[-1]
+    # 3. Remove leading '*' and '&' if present
+    if name.startswith("*") or name.startswith("&"):
+        name = name[1:]
+    return name
+
+
+def find_diff_sections_in_object_file(old_file, new_file):
+    def objdump_output(f):
+        """ Get the objdump output of the specified file
+        """
+        proc = subprocess.run("objdump -d {}".format(f),
+                shell = True,
+                stdout = subprocess.PIPE)
+        return proc.stdout.decode("UTF-8")
+
+    def objdump_function_name_demangling(name, name_only = True):
+        """ Demangles the function name of an objdump function name
+        """
+        proc = subprocess.run("c++filt -n '{}'".format(name),
+                shell = True,
+                stdout = subprocess.PIPE)
+        signature = proc.stdout.decode("UTF-8").strip()
+        
+        if name_only:
+            return extract_function_name_from_signature(signature)
+        return signature
+
+    old_objdump = objdump_output(old_file)
+    new_objdump = objdump_output(new_file)
+    
+    # Sections removed in old (e.g. a function was removed)
+    old_changed_sections = set()
+    # Sections common to both (e.g. a function was changed)
+    common_changed_sections = set()
+    # Sections added in new (e.g. a new function was added)
+    new_changed_sections = set()
+    
+    current_section = None
+    for d in difflib.ndiff(old_objdump.splitlines(keepends = True), new_objdump.splitlines(keepends = True)):
+    
+        if len(d.strip()) == 0:
+            # Empty line; New section
+            current_section = None
+            continue
+        
+        function_name = re.search(r'[0-9]{16} <(.*)>:', d[2:])
+        if function_name:
+            function_name = function_name.group(1) 
+
+            # Skip all remaining lines until to the next section, because the whole section was added/removed (if one of the if/else below applies)
+            if d.startswith("- "):
+                old_changed_sections.add(function_name)
+                current_section = None
+            elif d.startswith("+ "):
+                new_changed_sections.add(function_name)
+                current_section = None
+    
+            # Maybe a common section, check whether a line has changed within this section (code bloew)
+            current_section = function_name
+            if not isinstance(current_section, str):
+                print("----")
+                exit(1)
+            continue
+    
+        if current_section is None:
+            # Ignore all lines when no section is set (e.g. for the header)
+            continue
+        
+        if d.startswith("- ") or d.startswith("+ "):
+            # line unique to old or new
+            common_changed_sections.add(current_section)
+            continue
+        elif d.startswith("  "):
+            # line common to both sequences
+            pass
+        elif d.startswith("? "):
+            # line not present in either input sequence (just for guiding eye)
+            pass
+    
+    common_changed_sections = [objdump_function_name_demangling(name) for name in common_changed_sections]
+    old_changed_sections = [objdump_function_name_demangling(name) for name in old_changed_sections]
+    new_changed_sections = [objdump_function_name_demangling(name) for name in new_changed_sections]
+    return common_changed_sections, old_changed_sections, new_changed_sections
+
+
+
+
+def analyze(data_directory, perf_data_files, patch_file_names):
+    """ Find all function names for which the object file content differ
+    """ 
+    object_files = find_plain_patched_object_files(data_directory, patch_file_names)
+    
+    result_details = list()
+    sibling_status = set()
+    for patched_file in object_files:
+        old, new = object_files[patched_file]
+        common_names, old_names, new_names = find_diff_sections_in_object_file(old, new)
+
+        # We don't need to analyze old_names and new_names due to the following reasong:
+        # old_names (removed functions):
+        # Call chain:
+        # func 1 -> func 2 -> func 3
+        #                 |-> func 4
+        # Func 3 is removed (will be contained in old_names), but func 2 must also be changed
+        # because it cannoc call func 3 anymore. The change in func 2 will be detected by
+        # common_names
+        #
+        # new_names (added functions):
+        # Call chain:
+        # func 1 -> func 2 -> func 3
+        # And with the new version, func 2 will be modified to call func 3 AND func 4 (func 4 is added)
+        # func 4 will be contained in new_names, but we detect the change in func 2 (in common_names).
+        
+        for perf_file in perf_data_files:
+            for function_name in common_names:
+                result = funciton_is_sibling_in_perf_data(perf_file, function_name)
+                sibling_status.add(result)
+                result_details.append( (patched_file, perf_file, function_name, result) )
+
+    result_name = "-".join([s.name for s in sorted(sibling_status)])
+    result_file = Path(os.path.join(data_directory, SIBLING_RESULT_FILE_PREFIX + result_name))
+
+    result_output = set([f"{patched_file_name} | {os.path.basename(perf_file)} | {function_name} | {result.name}\n" for patched_file_name, perf_file, function_name, result in result_details])
+    result_output = sorted(result_output)
+    with open(result_file, "w") as f:
+        f.writelines(result_output)
+
+    print(result_name)
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+
+    parser.add_argument("--perf-data-directory",
+            dest="perf_data_directory",
+            type=str,
+            help="The directory in which the subdirectories containing the perf record data are stored",
+            default="perf-data")
+
+    parser.add_argument("-c", "--commit",
+            dest="commit",
+            type=str,
+            help="The commit for which the perf data should be analyzed.\nA directory with this specified nameexists in the '--perf-data-directory' and it must contain the respective perf record data and patch files",
+            required=True)
+
+    parser.add_argument("--benchmarks",
+            dest="benchmarks",
+            type=str,
+            nargs="+",
+            default=["noop", "ycsb", "tpcc"])
+
+    args = parser.parse_args()
+
+    data_directory = os.path.realpath(os.path.join(args.perf_data_directory, args.commit))
+    if not os.path.exists(data_directory):
+        print("'{}' does not exist!".format(data_directory))
+        exit(1)
+
+    #PATCH_FILE = os.path.realpath(os.path.join(DATA_DIRECTORY, PATCH_FILE))
+    #if not os.path.exists(PATCH_FILE):
+    #    print("'{}' - patch file does not exist!".format(PATCH_FILE))
+    #    exit(1)
+    
+    perf_data_files = []
+    patch_file_names = []
+    for f in os.listdir(data_directory):
+        if f.startswith(SIBLING_RESULT_FILE_PREFIX):
+            print("'{}' sibling result file already exists. File will be removed...".format(f))
+            os.remove(os.path.join(data_directory, f))
+            continue
+        if f.startswith(PATCH_OBJECT_FILE_PREFIX):
+            # patch--filesort_utils.cc.o
+            # Remove prefix: patch--
+            # Remove suffix: .o
+            filename_only = f[len(PATCH_OBJECT_FILE_PREFIX):-2]
+            patch_file_names.append(filename_only)
+        if f.endswith(".perf.data"):
+            perf_data_files.append(os.path.realpath(os.path.join(data_directory, f)))
+
+    if len(patch_file_names) == 0:
+        print("No patch--* files found in '{}'".format(data_directory))
+        exit(1)
+
+    analyze(data_directory, perf_data_files, patch_file_names)
+

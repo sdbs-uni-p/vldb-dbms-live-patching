@@ -1,0 +1,152 @@
+#!/usr/bin/env zsh
+set -e
+
+SCRIPT_DIR=${0:a:h}
+UTILS_DIR=${SCRIPT_DIR}/mariadb-wfpatch-utils
+BUILD_DIR=${SCRIPT_DIR}/build-dir
+BENCHBASE_DIR=${SCRIPT_DIR}/benchbase
+
+${SCRIPT_DIR}/setup
+
+# check if the required repos exist.
+if [ ! -d ${UTILS_DIR} ] || [ ! -d ${BENCHBASE_DIR} ]; then
+    echo "The mariadb-wfpatch-utils and benchbase repositories are required. Use 'setup' script to clone them."
+    exit 1
+fi
+
+####################
+## ARGUMENTS 
+####################
+
+function show_help {
+	echo "Missing arguments! Arguments:
+	-c|--commit	The commit hash or tag for which the binaries (HEAD and HEAD^) are built. git checkout is used to get the commit.
+	-t|--threads	The number of threads to be used. The default value is nproc."
+	exit 1
+}
+
+threads=$(nproc)
+while [[ "$#" -gt 0 ]]; do
+	case $1 in
+		-c|--commit) commit="$2"; echo "-c|--commit $commit"; shift ;;
+		-t|--threads) threads="$2"; echo "-t|--threads $threads"; shift ;;
+		*) echo "Unknown parameter passed: $1"; show_help ;;
+	esac
+	shift
+done
+
+if [ -z "${commit}" ]; then
+	echo "-c|--commit must be provided."
+	show_help
+fi
+
+if [[ ! ${threads} =~ ^[0-9]+$ ]]; then
+	echo "-t|--threads must be a number: ${threads}"
+	show_help
+fi
+
+####################
+## BUILD MARIADB 
+####################
+
+MARIADB_SERVER_DIR=${BUILD_DIR}/mariadb-wfpatch-commits
+if [ ! -d ${MARIADB_SERVER_DIR} ]; then
+    echo "${MARIADB_SERVER_DIR} the MariaDB server directory does not exist!"
+    exit 1
+fi
+
+OUTPUT_DIR=${UTILS_DIR}/output/${commit}
+if [ ! -d ${OUTPUT_DIR} ]; then
+	mkdir -p ${OUTPUT_DIR}
+fi
+
+${UTILS_DIR}/build -b ${BUILD_DIR} -n mariadb-wfpatch-commits -c ${commit} -o ${OUTPUT_DIR} -t ${threads} --debug
+
+
+####################
+## SETUP MARIADB 
+####################
+BENCH_CONFIG=${SCRIPT_DIR}/config
+BIN_DIR=${OUTPUT_DIR}/bin-debug/bin
+
+function kill_mysqld {
+	set +e
+	killall mysqld
+	sleep 2
+	kill -9 $(pidof mysqld)
+	sleep 2
+	set -e
+}
+
+function run_mysqld {
+	${BIN_DIR}/mysqld --no-defaults --skip-grant-tables --datadir=${DB_DATA_DIR} &
+	sleep 3
+}
+
+function init_data_dir {
+    ${BIN_DIR}/../scripts/mysql_install_db --datadir=${DB_DATA_DIR}
+    run_mysqld
+    ${BIN_DIR}/mysql -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS bench;"
+    kill_mysqld
+}
+
+####################
+## BUILD AND RUN BENCHBASE 
+####################
+
+cd ${BENCHBASE_DIR}
+if [ ! -d "target" ]; then
+	./mvnw clean -DskipTests package -P mariadb
+	cd target
+	tar xvzf benchbase-mariadb.tgz
+	cd benchbase-mariadb
+else
+	cd target/benchbase-mariadb
+fi
+
+PERF_RESULT_DIR=${SCRIPT_DIR}/perf-data/${commit}
+mkdir -p ${PERF_RESULT_DIR}
+
+function perf_mariadb {
+    config_name=$1
+    benchmark_name=$2
+
+    perf_output_file=${PERF_RESULT_DIR}/${benchmark_name}.perf.data
+    if [ -f ${perf_output_file} ]; then
+        # File already exists. Skip
+        echo "Skipping ${benchmark_name}, because perf file already exists!"
+        return
+    fi
+    
+    # Creata data dir
+    DB_DATA_DIR=`mktemp -d`
+    init_data_dir
+
+    # Data generation
+    run_mysqld
+    java -jar benchbase.jar -b ${benchmark_name} -c ${BENCH_CONFIG}/${config_name} --create=true --load=true
+    kill_mysqld
+
+    # Perf
+    perf record --output=${perf_output_file} -g --call-graph dwarf ${BIN_DIR}/mysqld --no-defaults --skip-grant-tables --datadir=${DB_DATA_DIR} &
+    sleep 3
+    java -jar benchbase.jar -b ${benchmark_name} -c ${BENCH_CONFIG}/${config_name} --execute=true
+    kill_mysqld
+    
+    rm -rf ${DB_DATA_DIR}
+}
+
+# Stop mariadb if running...
+kill_mysqld
+
+# 1. Genearte perf data
+perf_mariadb sample_noop_config.xml noop
+perf_mariadb sample_ycsb_config.xml ycsb
+perf_mariadb sample_tpcc_config.xml tpcc
+
+# 2. Generate the patch file (to get the modified object files)
+${UTILS_DIR}/build -b ${BUILD_DIR} -n mariadb-wfpatch-commits -c ${commit} -o ${OUTPUT_DIR} -t ${threads}
+${UTILS_DIR}/generate-patch -d ${OUTPUT_DIR}
+
+cp ${OUTPUT_DIR}/*patch* ${PERF_RESULT_DIR}
+cp -r ${OUTPUT_DIR}/diff-object-files ${PERF_RESULT_DIR}
