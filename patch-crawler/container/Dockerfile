@@ -1,6 +1,6 @@
 # Copyright 2022, Michael Fruth <michael.fruth@uni-passau.de>
 
-FROM debian:bookworm
+FROM debian:bullseye
 
 MAINTAINER Michael Fruth <michael.fruth@uni-passau.de>
 
@@ -11,7 +11,7 @@ ENV LC_ALL="C"
 ################
 # INSTALLATION #
 ################
-RUN apt-get update
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y --no-install-recommends\
     bison \
     build-essential \
