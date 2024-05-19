@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+
+cd ${SCRIPT_DIR}/beder-patch
+pipenv run python load.py ~/fly-live-patching-paper/revision/redis-all-patches-load/ ~/fly-live-patching-paper/revision/redis-all-patches-load/redis-all-patches-load.duckdb
+
+cd ${SCRIPT_DIR}/beder
+pipenv run python loader_redis_all_patches.py --benchmark ~/fly-live-patching-paper/revision/redis-all-patches-load/ --output ~/fly-live-patching-paper/revision/redis-all-patches-load/redis-all-patches-load-beder.duckdb
+

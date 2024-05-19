@@ -1,3 +1,0 @@
-#!/usr/bin/env zsh
-
-docker build -t patch-analysis .
