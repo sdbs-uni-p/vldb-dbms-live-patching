@@ -30,6 +30,7 @@ RUN apt-get install -y --no-install-recommends\
     libssl-dev \
     libxml2-dev \
     ninja-build \
+    openjdk-17-jdk \
     pipenv \
     pkg-config \
     psmisc \
