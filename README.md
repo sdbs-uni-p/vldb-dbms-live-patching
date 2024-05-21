@@ -48,4 +48,12 @@ cd redis-fork-vs-wfpatch
 cd redis-all-patches
 ./benchmark
 
+cd mariadb-one-by-one
+./setup
+./run
+
+cd mariadb
+./setup
+# POSSIBILITY TO GET OUR DATASETS - DOWNLOAD data-output FROM SOMEWHERE
+
 ```

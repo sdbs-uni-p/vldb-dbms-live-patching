@@ -5,7 +5,7 @@ set -euv
 SCRIPT_DIR=${0:a:h}
 cd ${SCRIPT_DIR}
 
-pipenv run python patch-benchmark --load-only --config config-ch-load-data.yaml --commits mariadb.commits.success.wfpatch.perf
+pipenv run python patch-benchmark --load-only --config config-ch-load-data.yaml --commits mariadb.commits.success.wfpatch.perf.paper
 
 # Rename data-outputs
 cd ${SCRIPT_DIR}/data-output
