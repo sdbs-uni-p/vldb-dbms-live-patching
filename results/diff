@@ -12,6 +12,7 @@ function compare() {
     fi
     echo "###################################"
     echo "Comparing $file"
+    echo "Difference is (expected result is that no difference is displayed):"
     diff paper/$file reproduction/$file
     echo "###################################"
     echo ""
