@@ -4,12 +4,4 @@ set -e
 
 SCRIPT_DIR=${0:a:h}
 
-
-BENCHBASE_URL=https://github.com/cmu-db/benchbase.git
-BENCHBASE_DIR=benchbase
-
-if [ ! -d ${BENCHBASE_DIR} ]; then
-    git clone ${BENCHBASE_URL} ${BENCHBASE_DIR}
-fi
-
 pipenv install
