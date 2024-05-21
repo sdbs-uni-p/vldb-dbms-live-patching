@@ -7,7 +7,7 @@ SCRIPT_DIR=${0:a:h}
 function compare() {
     file=$1
     if [ ! -f reproduction/$file ]; then
-        exit 0
+        return
     fi
     echo "###################################"
     echo "Comparing $file"
