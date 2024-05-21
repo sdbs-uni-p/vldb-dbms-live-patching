@@ -1,0 +1,92 @@
+# Setup
+apt-get update -y
+apt-get install -y sudo vim git gcc tmux
+# Compile Linux Kernel:
+apt-get install -y build-essential flex bison libssl-dev bc elfutils libelf-dev dwarves libncurses-dev
+
+# Other
+apt-get install -y curl zsh openjdk-17-jdk unzip ccache ninja-build rsync libmariadb-dev libffi-dev
+
+# Compile MariaDB
+apt-get install -y --no-install-recommends\
+    bison \
+    build-essential \
+    ca-certificates \
+    ccache \
+    cmake \
+    curl \
+    git \
+    gnutls-dev \
+    libboost-all-dev \
+    libcurl4-openssl-dev \
+    libelf-dev \
+    libevent-dev \
+    libncurses5-dev \
+    libpcre2-dev \
+    libssl-dev \
+    libxml2-dev \
+    ninja-build \
+    openjdk-17-jdk \
+    pkg-config \
+    psmisc \
+    rsync \
+    sudo \
+    tmux \
+    unzip \
+    vim \
+    wget \
+    zlib1g-dev \
+    zsh
+
+# - Change /etc/sudoers to not need any password
+# - Add repro to sudo group: usermod -aG sudo repro
+# - Create 'cpupower' in /bin as this command cannot be used inside the VM. So scripts should not fail if this command is "missing" (cd /bin && touch cpupower && chmod +x cpupower)
+#
+# Compile Linux Kernel (mmview)
+# git clone https://github.com/luhsra/linux-mmview.git
+#
+# Important: When compiling the kernel, disable the following options:
+# - CONFIG_USERFAULTFD
+# - CONFIG_KSM
+# - CONFIG_TRANSPARENT_HUGEPAGE
+# - CONFIG_ACPI_NFIT
+# - CONFIG_X86_PMEM_LEGACY
+# - CONFIG_LIBNVDIMM
+#
+#
+# #############################
+# Compile kernel with modules (not done but here for reference)
+# #############################
+# make oldconfig
+#
+## Set in .config
+# - CONFIG_LOCALVERSION="-mmview"
+# 
+# make -j
+# sudo make modules_install
+# sudo make install
+#
+# #############################
+# Compile kernel without modules
+# #############################
+# make localmodconfig
+# make menuconfig (disable "enable loadable module support")
+#
+# Set in .config
+# - CONFIG_LOCALVERSION="-mmview-min"
+#
+# make -j
+# sudo make install
+
+
+# Increase watchdog timeout:
+# echo 60 > /proc/sys/kernel/watchdog_thresh
+#
+# Install pyenv and Python in version 3.10.1
+# ...
+# pyenv install 3.10.1
+# pyenv global 3.10.1
+# pip install pipenv
+#
+#
+# sudo apt-get install r-base
