@@ -1,9 +1,12 @@
 #!/usr/bin/env zsh
 
+# This script was used to send a notifiction to another server,
+# i.e. it mainly sent the current progress of a benchmark.
+
 set +e
 
 # Command should never produce any error!
-date=`date`
-ssh -o BatchMode=yes -T drogon "echo \"[$date] [`hostname`] ${@}\" >> ~/benchmark.`hostname`"
-set -e
+#date=`date`
+#ssh -o BatchMode=yes -T SOME-SERVER "echo \"[$date] [`hostname`] ${@}\" >> ~/benchmark.`hostname`"
+#set -e
 
