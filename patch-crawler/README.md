@@ -2,7 +2,6 @@
 
 > **_NOTE:_**: Patch generation is highly system specific. We have noticed slight differences when the following components are deviated from:
 - OS: Debian Bullseye (11)
-- Linux Kernel: 5.15.
 - GCC version: 10.2.
 
 This directory is responsible for crawling patches of the commit history of MariaDB and Redis. We have prepared a Docker image which we recommend to use for crawling patches.
