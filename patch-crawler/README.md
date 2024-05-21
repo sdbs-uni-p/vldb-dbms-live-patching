@@ -48,6 +48,12 @@ cd ~/dbms-live-patching/patch-crawler
 ./do-all-mariadb
 ```
 
+We make use of the following variable to store the results (lists containg the live patchable commits):
+
+```
+export RESULT_DIR="~/dbms-live-patching/results/reproduction/"
+```
+
 ---
 
 ### 1. Find commits patchable via Kpatch
@@ -130,10 +136,10 @@ The commits given in `commits.success` are further processed, while the other tw
 
 > **_NOTE:_** `commits.success` is a list of all git commits that are patchable using Kpatch.
 
-For easier handling, copy the `commits.success` file to the home directory:
+For easier handling, copy the `commits.success` file to the result directory:
 
 ```
-cp commits.success ~/mariadb.commits.success
+cp commits.success $RESULT_DIR/mariadb.commits.success
 ```
 
 
@@ -174,7 +180,7 @@ We try to automatically apply the source code changes for MariaDB, which prepare
 
 ```
 # Clones the MariaDB repository and tries to apply the source code changes to each given git commit.
-./mariadb ~/mariadb.commits.success
+./mariadb $RESULT_DIR/mariadb.commits.success
 ```
 
 This script performs the following steps:
@@ -194,9 +200,9 @@ Next, we again export all commits as a list for easier handling:
 ```
 cd mariadb-server
 # Export a list of all commits
-git tag -l | grep wfpatch.patch- > ~/mariadb.commits.success.wfpatch
+git tag -l | grep wfpatch.patch- > $RESULT_DIR/mariadb.commits.success.wfpatch
 # Create the same list without the wfpatch.patch prefix:
-cat ~/mariadb.commits.success.wfpatch | sed 's/^wfpatch\.patch-//' > ~/mariadb.commits.success.wfpatch.original
+cat $RESULT_DIR/mariadb.commits.success.wfpatch | sed 's/^wfpatch\.patch-//' > $RESULT_DIR/mariadb.commits.success.wfpatch.original
 ```
 
 > **_NOTE:_** `mariadb.commits.success.wfpatch` contains all versions of MariaDB that are (1) patchable via WfPatch and (2) which are prepared for live patching.
@@ -231,9 +237,9 @@ mkdir build-dir
 rsync -av ../create-patched-patch-repository/mariadb-server/ build-dir/mariadb-wfpatch-commits
 
 # Analyze MariaDB using perf
-./check-commit-list ~/mariadb.commits.success.wfpatch.original
+./check-commit-list $RESULT_DIR/mariadb.commits.success.wfpatch.original
 
-cp sibling.commits ~/mariadb.commits.success.wfpatch.perf.original
+cp sibling.commits $RESULT_DIR/mariadb.commits.success.wfpatch.perf.original
 
 ```
 
