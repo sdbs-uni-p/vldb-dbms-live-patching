@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eu
+
+echo "export CCACHE_CONFIGPATH=~/.ccache.conf" >> ~/.bashrc

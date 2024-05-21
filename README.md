@@ -14,3 +14,12 @@ The following steps describe how to reproduce this research. Each respective dir
 3. Transform experiment data into a DuckDB database (directory [transformation](transformation))
 4. Analyse results and plot charts (directory [plotting](plotting))
 
+
+
+## TODO:
+.. Instructions about downloading the VM ...
+
+Inside the VM:
+```
+git clone https://github.com/sdbs-uni-p/vldb-dbms-live-patching.git dbms-live-patching
+```
