@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+source kernel
+
+sudo sed -i -e "s/^$MMVIEW_CONFIG/#&/" \
+       -e "s/^#$REGULAR_CONFIG/$REGULAR_CONFIG/" \
+       "$GRUB_CONFIG_FILE"
+
+sudo update-grub
+
+echo "GRUB configuration updated successfully."
+
