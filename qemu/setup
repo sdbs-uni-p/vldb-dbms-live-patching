@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+if [ -d dbms-live-patching ]; then
+	echo "dbms-live-patching already exists"
+	exit 0
+fi
+
+git clone https://github.com/sdbs-uni-p/vldb-dbms-live-patching.git dbms-live-patching
+
+cd dbms-live-patching/utils
+./setup
+
