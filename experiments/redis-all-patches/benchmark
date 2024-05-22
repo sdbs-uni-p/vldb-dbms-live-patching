@@ -16,7 +16,7 @@ fi
 
 sudo cpupower frequency-set -g performance
 
-RESULT_DIR=`./store-result-dir redis-all-patches-load`
+FINAL_RESULT_DIR=`./store-result-dir redis-all-patches-load`
 
 cd ${SCRIPT_DIR}
 mkdir -p output
@@ -69,8 +69,8 @@ do
     rm -rf ${SCRIPT_DIR}/output/$line
 done < ${SCRIPT_DIR}/redis.commits.success.wfpatch
 
-echo "Storing results in ${RESULT_DIR}"
-mv ${SCRIPT_DIR}/output-benchmark/* ${RESULT_DIR}
+echo "Storing results in ${FINAL_RESULT_DIR}"
+mv ${SCRIPT_DIR}/output-benchmark/* ${FINAL_RESULT_DIR}
 
 # Delete intermediate files..
 rm -rf ${SCRIPT_DIR}/output
