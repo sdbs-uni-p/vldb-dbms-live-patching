@@ -31,7 +31,6 @@ RUN apt-get install -y --no-install-recommends\
     libxml2-dev \
     ninja-build \
     openjdk-17-jdk \
-    pipenv \
     pkg-config \
     psmisc \
     python3-pip \
