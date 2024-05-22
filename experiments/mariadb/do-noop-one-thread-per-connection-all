@@ -6,5 +6,5 @@ SCRIPT_DIR=${0:a:h}
 benchmark="noop"
 
 cd ${SCRIPT_DIR}
-exec ./exec ${benchmark} config-${benchmark}-one-thread-per-connection-all.yaml mariadb.commits.success.wfpatch
+exec ./exec ${benchmark} config-${benchmark}-one-thread-per-connection-all.yaml result-one-thread-per-connection-all-patches-load mariadb.commits.success.wfpatch
 

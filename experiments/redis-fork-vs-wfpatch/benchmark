@@ -19,7 +19,6 @@ fi
 sudo cpupower frequency-set -g performance
 
 
-FINAL_RESULT_DIR=`./store-result-dir redis-1-200_400kB`
 qps=4500
 for action_after_sleep in `seq 1 200`; do
     for method in 0 5 6; do
@@ -32,7 +31,7 @@ for action_after_sleep in `seq 1 200`; do
         set -e
         sleep 1
     
-        RESULT_DIR=${SCRIPT_DIR}/output/result-${method}-${action_after_sleep}
+        RESULT_DIR=${SCRIPT_DIR}/result/result-${method}-${action_after_sleep}
         mkdir -p ${RESULT_DIR}
         touch ${RESULT_DIR}/wfpatch_log
         touch ${RESULT_DIR}/wfpatch_log.csv
@@ -62,11 +61,6 @@ for action_after_sleep in `seq 1 200`; do
         sleep 30 # It takes some time until all main memory is deleted
     done
 done
-
-echo "Storing results in ${FINAL_RESULT_DIR}"
-mv ${SCRIPT_DIR}/output/* ${FINAL_RESULT_DIR}
-# Remove empty directory
-rm -rf ${SCRIPT_DIR}/output
 
 sudo cpupower frequency-set -g schedutil
 

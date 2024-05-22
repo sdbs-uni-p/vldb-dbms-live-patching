@@ -6,5 +6,5 @@ SCRIPT_DIR=${0:a:h}
 benchmark="noop"
 
 cd ${SCRIPT_DIR}
-exec ./exec ${benchmark} config-${benchmark}-one-thread-per-connection-every.yaml
+exec ./exec ${benchmark} config-${benchmark}-one-thread-per-connection-every.yaml result-one-thread-per-connection-every-0.1
 

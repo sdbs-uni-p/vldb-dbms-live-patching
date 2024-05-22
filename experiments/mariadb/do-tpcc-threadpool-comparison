@@ -6,5 +6,5 @@ SCRIPT_DIR=${0:a:h}
 benchmark="tpcc"
 
 cd ${SCRIPT_DIR}
-exec ./exec ${benchmark} config-${benchmark}-threadpool-comparison.yaml commits.COMPARISON
+exec ./exec ${benchmark} config-${benchmark}-threadpool-comparison.yaml result-threadpool-comparison  wfpatch.commits.comparison
 

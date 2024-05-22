@@ -14,10 +14,3 @@ cd ${SCRIPT_DIR}
 sleep 1
 pipenv run python server.py
 
-
-FINAL_RESULT_DIR=`./store-result-dir patch-one-by-one/data`
-echo "Storing results in ${FINAL_RESULT_DIR}"
-mv ${SCRIPT_DIR}/wf_log.txt ${FINAL_RESULT_DIR}
-mv ${SCRIPT_DIR}/patch_one_by_one_raw.csv ${FINAL_RESULT_DIR}
-mv ${SCRIPT_DIR}/patch_one_by_one_wf.csv ${FINAL_RESULT_DIR}
-

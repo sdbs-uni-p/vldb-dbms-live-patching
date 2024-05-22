@@ -1,0 +1,4 @@
+GRUB_CONFIG_FILE="/etc/default/grub"
+# We need to escape '/' as this is passed to sed
+MMVIEW_CONFIG="GRUB_DEFAULT='Advanced options for Debian GNU\/Linux>Debian GNU\/Linux, with Linux 5.15.0-mmview-min'"
+REGULAR_CONFIG="GRUB_DEFAULT='Advanced options for Debian GNU\/Linux>Debian GNU\/Linux, with Linux 5.15.0-0.bpo.3-amd64'"
