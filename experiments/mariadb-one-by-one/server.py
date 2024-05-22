@@ -8,9 +8,9 @@ import time
 import os
 
 DIR = os.path.dirname(os.path.realpath(__file__))
-OUTPUT_FILE = "patch_one_by_one_raw.csv"
-WF_OUTPUT_FILE = "patch_one_by_one_wf.csv"
-DB_WF_OUTPUT_FILE = "wf_log.txt"
+OUTPUT_FILE = "result/patch_one_by_one_raw.csv"
+WF_OUTPUT_FILE = "result/patch_one_by_one_wf.csv"
+DB_WF_OUTPUT_FILE = "result/wf_log.txt"
 
 def connect():
     return mariadb.connect(user="root", host="127.0.0.1", port=3306)
