@@ -47,10 +47,10 @@ cd ~/dbms-live-patching/patch-crawler
 ./do-all-mariadb
 ```
 
-We make use of the following variable to store the results (lists containg the live patchable commits):
+We make use of the following variable to store the live patchable commits in a list:
 
 ```
-export RESULT_DIR="~/dbms-live-patching/results/reproduction/"
+export RESULT_DIR="~/dbms-live-patching/commits/reproduction/"
 ```
 
 ---
