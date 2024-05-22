@@ -6,5 +6,5 @@ SCRIPT_DIR=${0:a:h}
 benchmark="tpcc"
 
 cd ${SCRIPT_DIR}
-exec ./exec ${benchmark} config-${benchmark}-threadpool-every.yaml
+exec ./exec ${benchmark} config-${benchmark}-threadpool-every.yaml result-threadpool-every-0.1 
 
