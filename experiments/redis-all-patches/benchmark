@@ -9,12 +9,14 @@ cd ${SCRIPT_DIR}
 if [ ! -d build-dir ]; then
     mkdir -p build-dir
     # Create Redis repository
-    ./create-patched-patch-repository/redis ${SCRIPT_DIR}/redis.wfpatch.success.original
+    ./create-patched-patch-repository/redis ${SCRIPT_DIR}/redis.commits.success.wfpatch.original
     # Move repository to build dir
     mv create-patched-patch-repository/redis-server build-dir/redis
 fi
 
 sudo cpupower frequency-set -g performance
+
+FINAL_RESULT_DIR=`./store-result-dir redis-all-patches-load`
 
 cd ${SCRIPT_DIR}
 mkdir -p output
@@ -65,6 +67,13 @@ do
     done
     # We need to save memory... Delete compilations once we finished our benchmark
     rm -rf ${SCRIPT_DIR}/output/$line
-done < ${SCRIPT_DIR}/redis.wfpatch.success
+done < ${SCRIPT_DIR}/redis.commits.success.wfpatch
+
+echo "Storing results in ${FINAL_RESULT_DIR}"
+mv ${SCRIPT_DIR}/output-benchmark/* ${FINAL_RESULT_DIR}
+
+# Delete intermediate files..
+rm -rf ${SCRIPT_DIR}/output
+rm -rf ${SCRIPT_DIR}/output-benchmark
 
 sudo cpupower frequency-set -g schedutil
