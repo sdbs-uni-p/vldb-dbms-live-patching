@@ -42,8 +42,15 @@ rm -rf ${PATCHES_OUTPUT_DIR} && mkdir ${PATCHES_OUTPUT_DIR}
 
 cd ${UTILS_DIR}
 for i in `seq 1 9`; do
-    ./build -b ${MARIADB_DIR}/.. -n server -c example-print-$i -o ${PATCHES_OUTPUT_DIR}/$i
-    ./generate-patch -d ${PATCHES_OUTPUT_DIR}/$i
+    local_patch_output=${PATCHES_OUTPUT_DIR}/$i 
+    ./build -b ${MARIADB_DIR}/.. -n server -c example-print-$i -o ${local_patch_output}
+    ./generate-patch -d ${local_patch_output}
+    if [[ $i -ne 1 ]]; then
+        rm -rf ${local_patch_output}/bin
+    fi
+    rm -rf ${local_patch_output}/build
+    rm -rf ${local_patch_output}/build-new
+    rm -rf ${local_patch_output}/diff-object-files
 done
 
 cd ${SCRIPT_DIR}
