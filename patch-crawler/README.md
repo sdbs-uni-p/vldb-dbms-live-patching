@@ -30,7 +30,7 @@ docker exec -it wfpatch-patch-crawler /bin/bash
 
 > **_NOTE:_** All following commands are executed from within the Docker container.
 
-## Perf
+### Perf
 TODO: Write section...
 
 You may need to install perf manually, depending on the host system. If the version of the Docker container and the host OS match and the host OS has not installed a different Linux kernel, you can use perf within the Docker container. Otherwhise, you may have to compile perf for your respective kernel manually. See the commands in `patch-crawler/container/resources/system-setup/system-setup.d/01-perf` on how to manually install perf. Please note, the requiered packages may be different for different kernel versions, so these commands are not a guarantee for immediate success.
