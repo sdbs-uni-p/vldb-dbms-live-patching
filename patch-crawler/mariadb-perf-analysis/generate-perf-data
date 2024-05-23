@@ -150,3 +150,6 @@ ${UTILS_DIR}/generate-patch -d ${OUTPUT_DIR}
 
 cp ${OUTPUT_DIR}/*patch* ${PERF_RESULT_DIR}
 cp -r ${OUTPUT_DIR}/diff-object-files ${PERF_RESULT_DIR}
+
+# Save memory
+rm -rf ${OUTPUT_DIR}
