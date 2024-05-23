@@ -1,3 +1,8 @@
+# This script contains commands and notes on how this VM was prepared.
+
+# Add NOPASSWD to sudo group (/etc/sudoers)
+# Add repro to sudo gropu (usermod -aG sudo repro)
+
 # Setup
 apt-get update -y
 apt-get install -y sudo vim git gcc tmux
