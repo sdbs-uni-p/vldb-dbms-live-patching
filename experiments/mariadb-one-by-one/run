@@ -14,4 +14,3 @@ cd ${SCRIPT_DIR}
 sleep 1
 pipenv run python server.py
 
-

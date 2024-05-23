@@ -49,7 +49,7 @@ def get_script(name: str) -> str:
 
 def build(experiment: Experiment) -> None:
     command = [
-        get_path_from_root(["wfpatch-utils", "build"]),
+        get_path_from_root(["mariadb-wfpatch-utils", "build"]),
         "--commit",
         experiment.commit,
         "--build-dir",
@@ -67,7 +67,7 @@ def build(experiment: Experiment) -> None:
 
 def create_patches(experiment: Experiment) -> None:
     command = [
-        get_path_from_root(["wfpatch-utils", "generate-patch"]),
+        get_path_from_root(["mariadb-wfpatch-utils", "generate-patch"]),
         "--dir",
         experiment.build.output,
     ]

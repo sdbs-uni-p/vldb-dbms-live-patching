@@ -5,6 +5,7 @@ SCRIPT_DIR=${0:a:h}
 
 benchmark=$1
 config=$2
+result_dir=$3
 
 if [ -z ${benchmark+x} ]; then
     echo "No benchmark given!"
@@ -18,13 +19,22 @@ if [ ! -f ${config} ]; then
     echo "Config doesn't exist!"
     exit 1
 fi
-commit_list="commits.PAPER"
-if [ ! -z ${3+x} ]; then
-    commit_list=${3}
+if [ -z ${result_dir+x} ]; then
+    echo "result_directory not given!"
+    exit 1
+fi
+if [ ! -d ${result_dir} ]; then
+    echo "${result_dir} result directory does not exist!"
+    exit 1
+fi
+
+commit_list="mariadb.commits.success.wfpatch.perf.paper"
+if [ ! -z ${4+x} ]; then
+    commit_list=${4}
 fi
 
 pipenv run python patch-benchmark --config ${config} --commits ${commit_list}
 #pipenv run python beder --benchmark result --output result/${benchmark}.duckdb
 
-${SCRIPT_DIR}/collect-results ${benchmark}
+${SCRIPT_DIR}/collect-results ${benchmark} ${result_dir}
 

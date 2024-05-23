@@ -2,11 +2,12 @@
 set -euv
 
 benchmark=$1
+result_dir=$2
 
 SCRIPT_DIR=${0:a:h}
 
 cd ${SCRIPT_DIR}
 
 output="result-${benchmark}"
-mv result ${output}
+mv result ${result_dir}/${output}
 

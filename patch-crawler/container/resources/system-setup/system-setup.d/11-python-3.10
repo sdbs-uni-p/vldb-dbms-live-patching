@@ -3,3 +3,4 @@ set -eu
 source ~/.profile
 pyenv install 3.10.1
 pyenv global 3.10.1
+/home/repro/.pyenv/versions/3.10.1/bin/pip install pipenv

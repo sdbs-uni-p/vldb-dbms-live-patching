@@ -9,7 +9,7 @@ cd ${SCRIPT_DIR}
 if [ ! -d build-dir ]; then
     mkdir -p build-dir
     # Create Redis repository
-    ./create-patched-patch-repository/redis ${SCRIPT_DIR}/redis.wfpatch.success.original
+    ./create-patched-patch-repository/redis ${SCRIPT_DIR}/redis.commits.success.wfpatch.original
     # Move repository to build dir
     mv create-patched-patch-repository/redis-server build-dir/redis
 fi
@@ -21,7 +21,7 @@ mkdir -p output
 
 while IFS= read -r line
 do
-    if [ -d ${SCRIPT_DIR}/output-benchmark/$line ]; then
+    if [ -d ${SCRIPT_DIR}/result/$line ]; then
         continue
     fi
 
@@ -30,17 +30,17 @@ do
     cd ${SCRIPT_DIR}
     redis-wfpatch-utils/generate-patch -d output/$line
 
-    mkdir -p ${SCRIPT_DIR}/output-benchmark/$line
+    mkdir -p ${SCRIPT_DIR}/result/$line
     patch_queue=""
     for patch_file in `ls ${SCRIPT_DIR}/output/$line/patch--*`; do
         patch_queue+="${patch_file},"
-        cp $patch_file ${SCRIPT_DIR}/output-benchmark/$line/
+        cp $patch_file ${SCRIPT_DIR}/result/$line/
     done
     patch_queue=${patch_queue%?}
     
     cd ${SCRIPT_DIR}
     for quiescence in 0 1; do
-        logfile=${SCRIPT_DIR}/output-benchmark/$line/wf_log_$quiescence
+        logfile=${SCRIPT_DIR}/result/$line/wf_log_$quiescence
         touch $logfile
         
         WF_PATCH_QUEUE=${patch_queue} WF_GLOBAL=${quiescence} WF_PATCH_TRIGGER_FIFO=/tmp/trigger-redis WF_LOGFILE=${logfile} taskset -c 1-47:2 ./output/$line/build/src/redis-server --save "" --appendonly no &
@@ -65,6 +65,8 @@ do
     done
     # We need to save memory... Delete compilations once we finished our benchmark
     rm -rf ${SCRIPT_DIR}/output/$line
-done < ${SCRIPT_DIR}/redis.wfpatch.success
+done < ${SCRIPT_DIR}/redis.commits.success.wfpatch
+# Every line is deleted, so we also delete the directory
+rm -rf ${SCRIPT_DIR}/output
 
 sudo cpupower frequency-set -g schedutil
