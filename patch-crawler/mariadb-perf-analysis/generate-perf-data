@@ -55,7 +55,7 @@ if [ ! -d ${MARIADB_SERVER_DIR} ]; then
     exit 1
 fi
 
-ROOT_OUTPUT_DIR=${SCRIPT_DIR}/output
+ROOT_OUTPUT_DIR=${SCRIPT_DIR}/build-output
 OUTPUT_DIR=${ROOT_OUTPUT_DIR}/${commit}
 if [ ! -d ${OUTPUT_DIR} ]; then
 	mkdir -p ${OUTPUT_DIR}
