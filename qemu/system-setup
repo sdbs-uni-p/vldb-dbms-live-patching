@@ -7,6 +7,10 @@ apt-get install -y build-essential flex bison libssl-dev bc elfutils libelf-dev 
 # Other
 apt-get install -y curl zsh openjdk-17-jdk unzip ccache ninja-build rsync libmariadb-dev libffi-dev
 
+# for perf:
+sudo su -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
+
+
 # Compile MariaDB
 apt-get install -y --no-install-recommends\
     bison \
