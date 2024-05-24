@@ -3,6 +3,7 @@
 SCRIPT_DIR=${0:a:h}
 
 cd ${SCRIPT_DIR}
+
 Rscript -e 'renv::init()'
-RUN Rscript -e 'renv::restore()'
+Rscript -e 'renv::restore()'
 
