@@ -55,7 +55,8 @@ if [ ! -d ${MARIADB_SERVER_DIR} ]; then
     exit 1
 fi
 
-OUTPUT_DIR=${UTILS_DIR}/output/${commit}
+ROOT_OUTPUT_DIR=${SCRIPT_DIR}/build-output
+OUTPUT_DIR=${ROOT_OUTPUT_DIR}/${commit}
 if [ ! -d ${OUTPUT_DIR} ]; then
 	mkdir -p ${OUTPUT_DIR}
 fi
@@ -150,3 +151,6 @@ ${UTILS_DIR}/generate-patch -d ${OUTPUT_DIR}
 
 cp ${OUTPUT_DIR}/*patch* ${PERF_RESULT_DIR}
 cp -r ${OUTPUT_DIR}/diff-object-files ${PERF_RESULT_DIR}
+
+# Save memory
+rm -rf ${ROOT_OUTPUT_DIR}

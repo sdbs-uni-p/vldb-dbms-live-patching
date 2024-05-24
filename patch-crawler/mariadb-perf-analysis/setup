@@ -5,3 +5,6 @@ set -e
 SCRIPT_DIR=${0:a:h}
 
 pipenv install
+
+echo "Enabling PERF to trace all events"
+sudo su -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"

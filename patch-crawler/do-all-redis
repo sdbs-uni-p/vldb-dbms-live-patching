@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_DIR=${0:a:h}
-RESULT_DIR=${SCRIPT_DIR}/../commits/reproduction/
+RESULT_DIR=${SCRIPT_DIR}/../commits/reproduction
 
 # This script just wraps all commands of the README.md file
 
