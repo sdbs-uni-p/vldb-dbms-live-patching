@@ -1,1 +1,5 @@
-export INPUT_BASE_DIRECTORY=`pwd`
+#!/usr/bin/env zsh
+
+SCRIPT_DIR=${0:a:h}
+
+export INPUT_BASE_DIRECTORY=${SCRIPT_DIR}/../../data
