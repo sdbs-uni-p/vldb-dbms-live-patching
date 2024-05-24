@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+blacklist=("redis-all-patches-load" "patch-one-by-one" "redis-1-200_400kB")
+
+${SCRIPT_DIR}/transform-redis-all-patches ../data/redis-all-patches-load
+
+for dir in `ls -d ../data/*/`; do
+    dir_name=`basename $dir`
+    if (($blacklist[(Ie)$dir_name])); then
+        # Element is contained in blacklist
+        continue
+    fi
+    ${SCRIPT_DIR}/transform-experiment $dir
+done
+
+
