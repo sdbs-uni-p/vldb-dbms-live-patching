@@ -23,7 +23,7 @@ echo "---------------------------"
 echo ""
 compare "mariadb.commits.success"
 compare "mariadb.commits.success.wfpatch"
-compare "mariadb.commits.success.perf"
+compare "mariadb.commits.success.wfpatch..perf.original"
 
 echo ""
 echo ""
