@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 
 source INPUT_BASE_DIRECTORY
-./exec-file-py --input-data $INPUT_BASE_DIRECTORY/one-thread-per-connection-all-patches-load/one-thread-per-connection-all-patches-load.duckdb $INPUT_BASE_DIRECTORY/redis-all-patches-load/redis-all-patches-load.duckdb --output $INPUT_BASE_DIRECTORY/output --plot plot-patch-application.R --prefix "OTPC-Redis-"
+source OUTPUT_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/one-thread-per-connection-all-patches-load/one-thread-per-connection-all-patches-load.duckdb $INPUT_BASE_DIRECTORY/redis-all-patches-load/redis-all-patches-load.duckdb --output $OUTPUT_DIRECTORY --plot plot-patch-application.R --prefix "OTPC-Redis-"
 
-./exec-file-py --input-data $INPUT_BASE_DIRECTORY/threadpool-all-patches-load/threadpool-all-patches-load.duckdb $INPUT_BASE_DIRECTORY/redis-all-patches-load/redis-all-patches-load.duckdb --output $INPUT_BASE_DIRECTORY/output --plot plot-patch-application.R --prefix 'TP-Redis-'
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/threadpool-all-patches-load/threadpool-all-patches-load.duckdb $INPUT_BASE_DIRECTORY/redis-all-patches-load/redis-all-patches-load.duckdb --output $OUTPUT_DIRECTORY --plot plot-patch-application.R --prefix 'TP-Redis-'

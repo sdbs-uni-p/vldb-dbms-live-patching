@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
 source INPUT_BASE_DIRECTORY
-./exec-file-py --input-data $INPUT_BASE_DIRECTORY/threadpool/threadpool.duckdb --output $INPUT_BASE_DIRECTORY/threadpool/output --plot plot-latencies.R --prefix 'TP-'
+source OUTPUT_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/threadpool/threadpool.duckdb --output $OUTPUT_DIRECTORY --plot plot-latencies.R --prefix 'TP-'
 

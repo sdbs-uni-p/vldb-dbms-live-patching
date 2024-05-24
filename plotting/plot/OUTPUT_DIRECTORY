@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+SCRIPT_DIR=${0:a:h}
+
+export OUTPUT_DIRECTORY=${SCRIPT_DIR}/../../plots/reproduction
+

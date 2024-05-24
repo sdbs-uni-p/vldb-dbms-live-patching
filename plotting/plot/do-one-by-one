@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
 source INPUT_BASE_DIRECTORY
-./exec-file-py --input $INPUT_BASE_DIRECTORY/patch-one-by-one/data --output $INPUT_BASE_DIRECTORY/patch-one-by-one/output --plot plot-one-by-one.R
+source OUTPUT_DIRECTORY
+./exec-file-py --input $INPUT_BASE_DIRECTORY/patch-one-by-one/data --output $OUTPUT_DIRECTORY --plot plot-one-by-one.R
 

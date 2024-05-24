@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
 source INPUT_BASE_DIRECTORY
-./exec-file-py --input-data $INPUT_BASE_DIRECTORY/redis-1-200_400kB/data --output $INPUT_BASE_DIRECTORY/redis-1-200_400kB/output --plot plot-redis-as-fork-line.R --prefix "Redis-"
+source OUTPUT_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/redis-1-200_400kB/data --output $OUTPUT_DIRECTORY --plot plot-redis-as-fork-line.R --prefix "Redis-"
 
