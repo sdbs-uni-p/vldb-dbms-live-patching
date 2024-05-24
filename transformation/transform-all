@@ -15,7 +15,7 @@ for dir in `ls -d ../data/*/`; do
     fi
     echo "#########################"
     echo "Transforming $dir"
-    ./transform-experiment $dir
+    ./transform-experiment ${SCRIPT_DIR}/$dir
     echo "#########################"
     echo ""
 done
