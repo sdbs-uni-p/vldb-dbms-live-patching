@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-set -euv
+set -uv
 
 SCRIPT_DIR=${0:a:h}
 cd ${SCRIPT_DIR}
