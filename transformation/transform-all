@@ -13,6 +13,11 @@ for dir in `ls -d ../data/*/`; do
         # Element is contained in blacklist
         continue
     fi
+    if [[ "$dir_name" == "threadpool-comparison" ]]; then
+        export BEDER_RANDOM_RUN_ID=1
+    else
+        export BEDER_RANDOM_RUN_ID=0
+    fi
     echo "#########################"
     echo "Transforming $dir"
     ./transform-experiment ${SCRIPT_DIR}/$dir

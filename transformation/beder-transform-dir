@@ -8,6 +8,7 @@ if [ ! -d ${dir} ]; then
     exit 1
 fi
 
+
 for benchmark_dir in `find ${dir} -type f -name log | xargs dirname | xargs dirname | uniq`; do
     benchmark_name=`basename ${benchmark_dir}`
     benchmark_name=${benchmark_name#"result-"} # remove "result-" prefix
@@ -18,7 +19,11 @@ for benchmark_dir in `find ${dir} -type f -name log | xargs dirname | xargs dirn
         continue
     fi
     
-    pipenv run python beder --benchmark ${benchmark_dir} --output ${output_file} > /dev/null &
+    if [[ "$BEDER_RANDOM_RUN_ID" == "1" ]]; then
+        pipenv run python beder --benchmark ${benchmark_dir} --output ${output_file} --random-run-id > /dev/null &
+    else
+        pipenv run python beder --benchmark ${benchmark_dir} --output ${output_file} > /dev/null &
+    fi
     echo "$! | ${output_file}"
 done
 
