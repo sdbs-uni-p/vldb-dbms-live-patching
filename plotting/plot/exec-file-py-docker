@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+from argparse import ArgumentParser
+import tempfile
+from typing import List
+import os
+import subprocess
+import time
+
+SCRIPT_DIR = os.path.realpath(os.path.dirname(__file__))
+INPUT_DIR = os.path.join(SCRIPT_DIR, "input")
+
+# A list that collects all temporary directories..
+DELETE_AT_END: List[tempfile.TemporaryDirectory] = []
+
+def create_tmp_dir(base_dir: str) -> str:
+    tmp = tempfile.TemporaryDirectory(dir=base_dir)
+    DELETE_AT_END.append(tmp)
+    return tmp.name
+
+def prepare_input(input_data: List[str], temporary: bool = False) -> List[str]:
+    def rsync_data(src: str) -> str:
+        if not os.path.exists(src):
+            print(f"{src} does not exist!")
+            exit(1)
+        dst = create_tmp_dir(INPUT_DIR) if temporary else INPUT_DIR
+
+        subprocess.call(["rsync", "-ah", "--progress", src, dst, "--delete"])
+        return os.path.join(dst, os.path.basename(src))
+
+    return [rsync_data(src) for src in input_data]
+
+def create_plot(plot: str, input_files: List[str], output_dir: str) -> bool:
+    def sanitize_path(p: str) -> str:
+        return p.removeprefix(SCRIPT_DIR + "/")
+
+    r_files = [item for sublist in [("-v", f"./{f}:/root/plot/{f}") for f in os.listdir(SCRIPT_DIR) if os.path.isfile(f) and f.endswith(".R")] for item in sublist]
+
+    cmd = ["docker",
+           "run",
+           "--rm",
+           "-it",
+           *r_files,
+           "-v", f"{SCRIPT_DIR}/input:/root/plot/input/",
+           "-v", f"{SCRIPT_DIR}/output:/root/plot/output/",
+           "-v", f"{output_dir}:/root/plot/{sanitize_path(output_dir)}",
+           "-w", "/root/plot",
+           "patch-plotter",
+           f"./{plot}", 
+           *[sanitize_path(input_file) for input_file in input_files], 
+           sanitize_path(output_dir)]
+    ret = subprocess.call(cmd)
+    return ret == 0
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument("--input-data", "-i", nargs="+", help="The input data", required=True)
+    parser.add_argument("--temporary-input", "-tmpi", help="Copy input to the input directory as temporary file", action="store_true")
+    parser.add_argument("--plot", "-p", help="The file extecuted for plotting", required=True)
+    parser.add_argument("--output", "-o", help="The output directory")
+    parser.add_argument("--prefix", help="Prefix that is added to the file name", default="")
+
+    args = parser.parse_args()
+
+    dsts = prepare_input(args.input_data, args.temporary_input)
+
+    output: str
+    if args.output:
+        output = args.output
+    else:
+        output = os.path.join(SCRIPT_DIR, "output")
+    if not os.path.isdir(output):
+        os.mkdir(output)
+
+    plot_output = create_tmp_dir(SCRIPT_DIR)
+    success = create_plot(args.plot, dsts, plot_output)
+    print("-" * 30)
+    if not success:
+        print("Error generating the plot! Please debug!")
+    else:
+        print("Successfully generated plots!")
+        for file in [os.path.join(plot_output, file) for file in os.listdir(plot_output)]:
+            print(f"Generated plot: {os.path.basename(file)}")
+            subprocess.call(["mv", f"{file}", f"{output}/{args.prefix}{os.path.basename(file)}"])
+        print(f"Files stored in {output}")
+
+    # Cleanup temporary directories
+    for d in DELETE_AT_END:
+        d.cleanup()
+
+
+if __name__ == "__main__":
+    main()
