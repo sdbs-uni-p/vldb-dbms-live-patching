@@ -2,7 +2,7 @@
 
 set -eu
 
-SCRIPT_DIR=${0:a;H}
+SCRIPT_DIR=${0:a:h}
 
 cd ${SCRIPT_DIR}
 
