@@ -1,0 +1,51 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a;H}
+
+cd ${SCRIPT_DIR}
+
+cd ${SCRIPT_DIR}/redis-fork-vs-wfpatch
+./benchmark
+
+cd ${SCRIPT_DIR}/redis-all-patches
+./benchmark
+
+cd ${SCRIPT_DIR}/mariadb-one-by-one 
+./setup
+cd ${SCRIPT_DIR}/mariadb-one-by-one 
+./run
+
+
+cd ${SCRIPT_DIR}/mariadb
+./setup
+
+cd ${SCRIPT_DIR}/mariadb
+./do-noop-one-thread-per-connection
+./do-ycsb-one-thread-per-connection
+./do-tpcc-one-thread-per-connection
+
+cd ${SCRIPT_DIR}/mariadb
+./do-noop-threadpool
+./do-ycsb-threadpool
+./do-tpcc-threadpool
+
+cd ${SCRIPT_DIR}/mariadb
+./do-ch-one-thread-per-connection
+
+cd ${SCRIPT_DIR}/mariadb
+./do-noop-threadpool-comparison
+./do-ycsb-threadpool-comparison
+./do-tpcc-threadpool-comparison
+
+
+cd ${SCRIPT_DIR}/mariadb
+./do-noop-one-thread-per-connection-all
+./do-noop-threadpool-all
+
+
+cd ${SCRIPT_DIR}/mariadb
+./do-every-one-thread-per-connection
+./do-every-threadpool
+
