@@ -57,3 +57,27 @@ cd mariadb
 # POSSIBILITY TO GET OUR DATASETS - DOWNLOAD data-output FROM SOMEWHERE
 
 ```
+
+Repro. Steps:
+
+```
+./setup
+
+# ... Crawl Patches
+
+cd ~
+./kernel-mmview
+sudo reboot
+
+cd ~/dbms-live-patching/experiments
+cd redis-fork-vs-wfpatch
+./benchmark
+
+cd redis-all-patches
+./benchmark
+
+cd mariadb-on-by-one
+./setup
+./run
+
+```
