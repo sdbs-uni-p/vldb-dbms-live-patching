@@ -36,6 +36,16 @@ ssh repro@127.0.0.1 -p 2222
 ./setup
 ```
 
+### Preparation
+
+A common set of utility tools and scripts is used throughout the entire reproduction pipeline. These tools need to be prepared before executing any step. If you have already run the `~/setup` script (inside the VM), the utility tools are ready to use. Otherwise, you can set them up manually:
+
+```
+# Prepare common utility tools
+cd utils
+./setup
+```
+
 ### Accounts (username:password):
 
 - repro:repro
