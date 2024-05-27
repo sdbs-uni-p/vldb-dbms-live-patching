@@ -8,6 +8,8 @@ We crawl the MariaDB and Redis git history for live patchable source code change
 
 We assume the following steps are executed within the VM. At the end of this README, we provide commands using the Docker container.
 
+To safe disk space, we do not save any intermediate data. Otherwise several TB of free disk space would be required.
+
 ## Linux Kernel
 
 The following steps should be executed using the ***unmodified*** Linux kernel.
@@ -39,6 +41,10 @@ For the detailed steps, we make use of the following variable to specify the dir
 ```
 export RESULT_DIR="~/dbms-live-patching/commits/reproduction/"
 ```
+
+### Commits
+
+The directory `~/dbms-live-patching/commits/paper` contains the commit lists that we have crawled. Please note, the commits in `mariadb.commits.success.wfpatch.perf.paper` were selected manually from `mariadb.commits.success.wfpatch.perf.original` by checking each commit individually.
 
 ### 1. Find commits patchable via Kpatch
 

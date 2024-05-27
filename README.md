@@ -9,88 +9,24 @@ This repository contains all scripts and additional material referenced in the p
 ## Supplementary Material
 The directory [supplementary-material](supplementary-material) contains the additional charts referenced in the paper.
 
-## Reproduction Package
+## Reproduction Pipeline
 
-The following steps give a high-level overview on how to reproduce this research. 
+The following steps provide a high-level overview of how to reproduce this research:
 
-0. Initial: Prepare the system (directory [qemu](qemu)).
-1. Crawl development history for live patchable source code changes (directory [patch-crawler](patch-crawler)).
-2. Perform experiments (directory [experiments](experiments)).
-3. Transform experiment data into a DuckDB database (directory [transformation](transformation)).
-4. Analyse results and plot charts (directory [plotting](plotting)).
+0. **Initial**: Prepare the system (directory [qemu](qemu)).
+1. **Crawl Development History**: Identify live patchable source code changes (directory [patch-crawler](patch-crawler)).
+2. **Perform Experiments**: Conduct the experiments (directory [experiments](experiments)).
+3. **Transform Experiment Data**: Convert experiment data into a DuckDB database (directory [transformation](transformation)).
+4. **Analyze Results and Plot Charts**: Analyze the results and generate plots (directory [plotting](plotting)).
 
-The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. lease note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
+The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview; git hash `ecfcf9142ada6047b07643e9fa2afe439b69a5f0`). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. Please note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
 
-
-
-
+We provide our results, so step 1 or steps 2 and 3 can be skipped. This means experiments can be performed directly, or plots can be generated immediately.
 
 
 
 
 
-## TODO:
-.. Instructions about downloading the VM ...
 
-Inside the VM:
-```
-git clone https://github.com/sdbs-uni-p/vldb-dbms-live-patching.git dbms-live-patching
 
-cd ~/dbms-live-patching/utils
-./setup
 
-patch-crawler:
-./do-all-redis
-./do-all-mariadb
-
-cd ~/dbms-live-patching/results
-./diff
-
-sudo vim /etc/default/grub
-#GRUB_DEFAULT='Advanced options for Debian GNU/Linux>Debian GNU/Linux, with Linux 5.15.0-0.bpo.3-amd64'
-GRUB_DEFAULT='Advanced options for Debian GNU/Linux>Debian GNU/Linux, with Linux 5.15.0-mmview-min'
-<ESC>:wq
-sudo update-grub
-sudo reboot
-
-cd experiments
-
-cd redis-fork-vs-wfpatch
-./benchmark
-
-cd redis-all-patches
-./benchmark
-
-cd mariadb-one-by-one
-./setup
-./run
-
-cd mariadb
-./setup
-# POSSIBILITY TO GET OUR DATASETS - DOWNLOAD data-output FROM SOMEWHERE
-
-```
-
-Repro. Steps:
-
-```
-./setup
-
-# ... Crawl Patches
-
-cd ~
-./kernel-mmview
-sudo reboot
-
-cd ~/dbms-live-patching/experiments
-cd redis-fork-vs-wfpatch
-./benchmark
-
-cd redis-all-patches
-./benchmark
-
-cd mariadb-on-by-one
-./setup
-./run
-
-```
