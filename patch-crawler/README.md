@@ -1,39 +1,23 @@
 # Patch Crawler
 
+We crawl the MariaDB and Redis git history for live patchable source code changes (commits).
+
 > **_NOTE:_**: Patch generation is highly system specific. We have noticed slight differences when the following components are deviated from:
 - OS: Debian Bullseye (11)
 - GCC version: 10.2.
 
-This directory is responsible for crawling patches of the commit history of MariaDB and Redis. We have prepared a Docker image which we recommend to use for crawling patches.
+We assume the following steps are executed within the VM. At the end of this README, we provide commands using the Docker container.
 
-## Docker Container
+## Linux Kernel
 
-The directory [patch-crawler/container](patch-crawler/container) contains the script to build the Docker image and to run a container. You can either execute `docker-build` first and than `run-container` or you may execute the following commands manually:
+The following steps should be executed using the ***unmodified*** Linux kernel.
 
 ```
-cd container
-
-# 1. Build Docker image:
-docker build -t patch-crawler .
-
-# 2. Prepare host system and enable tracing of events:
-sudo su -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
-
-# 3. Run Docker container:
-# "--cap-add=SYS_PTRACE --privileged": Required for event tracing using perf.
-# "--tmpfs /tmp": We build MariaDB about 4500 times, which can be done in tmpfs (to protect the hard disk and speed up the crawling process).
-docker run --cap-add=SYS_PTRACE --privileged --tmpfs /tmp -it -d --name wfpatch-patch-crawler patch-crawler
-
-# 4. Accessing the container
-docker exec -it wfpatch-patch-crawler /bin/bash
+# Inside the VM:
+cd ~
+./kernel-regular
+sudo reboot
 ```
-
-> **_NOTE:_** All following commands are executed from within the Docker container.
-
-### Perf
-TODO: Write section...
-
-You may need to install perf manually, depending on the host system. If the version of the Docker container and the host OS match and the host OS has not installed a different Linux kernel, you can use perf within the Docker container. Otherwhise, you may have to compile perf for your respective kernel manually. See the commands in `patch-crawler/container/resources/system-setup/system-setup.d/01-perf` on how to manually install perf. Please note, the requiered packages may be different for different kernel versions, so these commands are not a guarantee for immediate success.
 
 ## Crawl MariaDB Commit History
 
@@ -46,24 +30,20 @@ Crawling the MariaDB commit history and selecting suitable patches is a multi-st
 The following script includes all commands that follow in this section. This means the entire analysis can be carried out fully automatically.
 
 ```
-cd ~/dbms-live-patching/patch-crawler
-
 # Executes all commands of this README for MariaDB
 ./do-all-mariadb
 ```
 
-We make use of the following variable to store the live patchable commits in a list:
+For the detailed steps, we make use of the following variable to specify the directory in which the list of live patchable commits is stored:
 
 ```
 export RESULT_DIR="~/dbms-live-patching/commits/reproduction/"
 ```
 
----
-
 ### 1. Find commits patchable via Kpatch
 
 ```
-cd ~/dbms-live-patching/patch-crawler/crawl-mariadb
+cd crawl-mariadb
 ```
 
 The MariaDB git history is crawled by using the commit range specified in the file `commits-to-analyze`. The range should be separated with `..` as the content is injected into a git command. The default range is `mariadb-10.5.0..mariadb-10.5.13` and results in about 4,600 commits to analyze. For each commit, we perform the following steps:
@@ -115,7 +95,7 @@ The directory `output/builds/` contains all the git repositories used for buildi
 #### Patch Analysis
 
 ```
-cd ~/dbms-live-patching/patch-crawler/analysis
+cd analysis
 ```
 
 The previous step results in a directory containing the generated patches (`output/patches`). When patches for a source code change (i.e. git commit) are generated, there may be two possible states: success and partial success (difference is explained below). Our further analysis uses only commits having the **success** status. 
@@ -146,11 +126,9 @@ For easier handling, copy the `commits.success` file to the result directory:
 cp commits.success $RESULT_DIR/mariadb.commits.success
 ```
 
-
-
 ##### Success vs Partial Success
 
-A git commit (or a source code change) may affect multiple files. Each file results into its own object file, and Kpatch tries to generate a patch based on two deviating object files. If patch generation was successful for **all** deviating object files, its status is **success**. If there is at least one patch, but Kpatch could not generate a patch for all deviating object files, its status is **partial success**.
+A git commit (or a source code change) may affect multiple files. Each file results into its own object file, and Kpatch tries to generate a patch for each deviating object file. If patch generation was successful for **all** deviating object files, its status is **success**. If there is at least one patch, but Kpatch could not generate a patch for all deviating object files, its status is **partial success**.
 
 We illustrate this with the following example:
 
@@ -167,20 +145,26 @@ build-new/
 	b.o
 	c.o
 
+# Example 1 (success):
 # We call this git commit (or patch) as success as it could generate for all deviating object files a patch. The sum of the three patches correspond to the source code change.
 output/patches/<COMMIT>/
 	patch--a.o
 	patch--b.o
 	patch--c.o
+	
+# Example 2 (partial success):
+# We call this git commit (or patch) as partial success as it could not generate for all deviating object files a patch.
+output/patches/<COMMIT>/
+	patch--b.o
 ```
 
 ### 2. Apply the MariaDB source code changes to the patchable versions
 
 ```
-cd ~/dbms-live-patching/patch-crawler/create-patched-patch-repository
+cd create-patched-patch-repository
 ```
 
-We try to automatically apply the source code changes for MariaDB, which prepare MariaDB for live patching (i.e. WfPatch extension, insertion of quiescence points, etc.). We prepared our source code changes for three different versions of MariaDB for a higher success rate; in particular for git version `mariadb-10.5.0`, `mariadb-10.5.13` and for commit `18502f99eb24f37d11e2431a89fd041cbdaea621`.
+We try to automatically apply the MariaDB source code changes (WfPatch integration, quiescence points etc.) to the MariaDB repository. We prepared our source code changes for three different versions of MariaDB for a higher success rate; in particular for git version `mariadb-10.5.0`, `mariadb-10.5.13` and for commit `18502f99eb24f37d11e2431a89fd041cbdaea621`.
 
 ```
 # Clones the MariaDB repository and tries to apply the source code changes to each given git commit.
@@ -209,24 +193,24 @@ git tag -l | grep wfpatch.patch- > $RESULT_DIR/mariadb.commits.success.wfpatch
 cat $RESULT_DIR/mariadb.commits.success.wfpatch | sed 's/^wfpatch\.patch-//' > $RESULT_DIR/mariadb.commits.success.wfpatch.original
 ```
 
-> **_NOTE:_** `mariadb.commits.success.wfpatch` contains all versions of MariaDB that are (1) patchable via WfPatch and (2) which are prepared for live patching.
+> **_NOTE:_** `mariadb.commits.success.wfpatch` contains all versions of MariaDB that are live patchable.
 
 ### 3. Analyze MariaDB patches using perf
 
 ```
-cd ~/dbms-live-patching/patch-crawler/mariadb-perf-analysis
+cd mariadb-perf-analysis
 ```
 
 We want to identify patches that affect transactions of MariaDB, i.e. patches that may have an affect when applied. We perform the following steps:
 
 Preparation:
 
-1. Setup BenchBase (benchmark framework)
-2. Use the MariaDB repository containing the `wfpatch.patch-<COMMIT>` git tags.
+1. Use the MariaDB repository containing the `wfpatch.patch-<COMMIT>` git tags.
+1. Enable tracing of perf events.
 
 Action:
 
-1. Start MariaDB and record (using perf) all functions calls
+1. Start MariaDB and record (using perf) all function calls
 2. Execute the benchmarks: NoOp, YCSB and TPC-C
 
 Once the benchmark is done, we analyze the perf data:
@@ -236,6 +220,9 @@ Once the benchmark is done, we analyze the perf data:
 3. Extract all commits for which all patches affect a function in the `do_command` stack trace.
 
 ```
+# Prepare directory
+./setup
+
 # Copy the repository containing the wfpatch.patch-<COMMIT> tags:
 mkdir build-dir
 rsync -av ../create-patched-patch-repository/mariadb-server/ build-dir/mariadb-wfpatch-commits
@@ -244,10 +231,51 @@ rsync -av ../create-patched-patch-repository/mariadb-server/ build-dir/mariadb-w
 ./check-commit-list $RESULT_DIR/mariadb.commits.success.wfpatch.original
 
 cp sibling.commits $RESULT_DIR/mariadb.commits.success.wfpatch.perf.original
+```
 
+>  _**NOTE:**_ Tracing events using perf may not be deterministic. While steps 1 and 2 are deterministic and always lead to the same result, this may not apply to this step. So some commits may deviate when reproducing this step.
+
+### 4. Compare crawler commits with our results
+
+```
+cd ~/dbms-live-patching/commits
+```
+
+The `diff` script compares the commit lists crawled by us with the newly created commit lists crawled in this reproduction step. There should be no output for any of the given commit lists (except perhaps for perf).
+
+```
+# Compare all commit lists
+./diff
 ```
 
 ## Crawl Redis Commit History
 
-Crawling the Redis Commit History for patchable commits is used similar to MariaDB, please see steps 1 and 2 for details (the `crawl-redis` directory is used for Redis).
+Crawling the Redis Commit History for patchable commits is used similar to MariaDB, please see steps 1, 2 and 4 for details (the `crawl-redis` directory is used for Redis).
 
+---
+
+## Docker Container
+
+The directory [patch-crawler/container](patch-crawler/container) contains the script to build the Docker image and to run a container. You can either execute `docker-build` first and than `run-container` or you may execute the following commands manually:
+
+```
+cd container
+
+# 1. Build Docker image:
+docker build -t patch-crawler .
+
+# 2. Prepare host system and enable tracing of events:
+sudo su -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
+
+# 3. Run Docker container:
+# "--cap-add=SYS_PTRACE --privileged": Required for event tracing using perf.
+# "--tmpfs /tmp": We build MariaDB about 4500 times, which can be done in tmpfs (to protect the hard disk and speed up the crawling process).
+docker run --cap-add=SYS_PTRACE --privileged --tmpfs /tmp -it -d --name wfpatch-patch-crawler patch-crawler
+
+# 4. Accessing the container
+docker exec -it wfpatch-patch-crawler /bin/bash
+```
+
+### Perf
+
+You may need to install perf manually, depending on the host system. If the version of the Docker container and the host OS match and the host OS has not installed a different Linux kernel, you can use perf within the Docker container. Otherwise, you may have to compile perf for your respective kernel manually. See the commands in `patch-crawler/container/resources/system-setup/system-setup.d/01-perf` on how to manually install perf. Please note, the required packages may be different for different kernel versions, so these commands are not a guarantee for immediate success.

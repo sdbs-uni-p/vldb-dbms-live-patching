@@ -10,5 +10,5 @@ By extracting the perf data, the following states are possible:
 - NOT\_EXECUTED
     - The patched functionality could *not be found* in any call graph.
 
-We continue with patches of status SIBLING and SIBLING\_AND\_MORE. 
+We continue with patches of status SIBLING and SIBLING\_AND\_MORE.
 
