@@ -1,0 +1,3 @@
+#!/usr/bin/env zsh
+
+pipenv run streamlit run comparison.py
