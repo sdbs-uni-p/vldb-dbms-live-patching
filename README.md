@@ -21,17 +21,7 @@ The following steps give a high-level overview on how to reproduce this research
 
 The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. lease note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
 
-### Steps Preparation
 
-A common set of utility tools and scripts is used throughout all steps. These tools have to be prepared before a step is executed.
-
-```
-# Prepare common utility tools
-cd utils
-./setup
-```
-
-Once prepared, the steps (1 - 4) given above in [Reproduction Package](#reproduction-package) can be executed (see the respective directory for instructions).
 
 
 
