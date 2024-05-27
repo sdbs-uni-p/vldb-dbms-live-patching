@@ -43,6 +43,27 @@ ssh repro@127.0.0.1 -p 2222
 
 > **_NOTE:_** In order to enable easy reproduction, security best practices were neglected. Both users are in the `sudo` group without the need for a password (`NOPASSWD` in `/etc/sudoers`).
 
+### Switching Kernel
+
+To reproduce our results, we require both the unmodified Linux kernel and the MMView Linux kernel. The VM includes scripts facilitating the easy switching of kernels:
+
+```
+# ssh into VM as repro user
+cd ~
+
+# Enable MMView Linux kernel
+./kernel-mmview
+sudo reboot
+
+# Enable unmodified Linux kernel
+./kernel-regular
+sudo reboot
+```
+
+### Additional Material
+
+- [vm-scripts/](vm-scripts): Contains scripts that are used inside the VM.
+
 ### VM Preparation Notes
 
 The following is a brief summary about the steps performed to prepare the VM. These steps can be used as a basis for preparing a host system.
