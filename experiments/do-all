@@ -20,6 +20,9 @@ cd ${SCRIPT_DIR}/mariadb-one-by-one
 
 cd ${SCRIPT_DIR}/mariadb
 ./setup
+cd ${SCRIPT_DIR}/mariadb
+./download-mariadb-dataset
+
 
 cd ${SCRIPT_DIR}/mariadb
 ./do-noop-one-thread-per-connection
