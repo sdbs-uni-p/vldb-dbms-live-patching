@@ -2,6 +2,21 @@
 
 We make use of DuckDB to analyze the benchmark data. The scripts in this directory transform the raw benchmark result into DuckDB databases.
 
+> **_NOTE:_** It is important to use DuckDB with the unmodified Linux kernel. We have experienced unforeseen crashes of DuckDB related to the MMView Linux kernel.
+
+## Linux Kernel
+
+The following steps must be executed using the ***unmodified*** Linux kernel.
+
+```
+# Inside the VM:
+cd ~
+./kernel-regular
+sudo reboot
+```
+
+## Transformation
+
 The following script transforms the raw data of all results (`~/dbms-live-patching/data/`) into DuckDB databases. The respective database will be stored in the respective experiment result directory (`~/dbms-live-patching/data/result-<EXPERIMENT>/<EXPERIMENT>.duckdb`) :
 
 ```

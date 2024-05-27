@@ -1,0 +1,121 @@
+# Plotting - Result Analysis
+
+These scripts are responsible for evaluating the benchmark data. The results will either be shown in the terminal or the plots will be stored in the `~/dbms-live-patching/plot/reproduction` directory.
+
+## Linux Kernel
+
+The following steps must be executed using the ***unmodified*** Linux kernel.
+
+```
+# Inside the VM:
+cd ~
+./kernel-regular
+sudo reboot
+```
+
+## Latency Breakdown (Table 2)
+
+```
+cd latency-breakdown
+./new-as
+./patch-application
+./reach-q
+./switch-as
+```
+
+## MariaDB - Teaser (Figure 1)
+
+```
+cd plot
+
+./setup
+
+./do-one-by-one
+```
+
+## MariaDB - OLTP Benchmarks (Figure 5)
+
+```
+cd plot
+
+# Setup was already performed
+# ./setup
+
+./do-qps-time
+```
+
+### Additional - Bar Charts
+
+```
+./do-qps-bar
+```
+
+
+
+## MariaDB - OLAP Benchmarks (Figure 6)
+
+```
+cd plot
+
+# Setup was already performed
+# ./setup
+
+./do-OTPC-ch-time
+```
+
+## MariaDB - Synchronization Time (Figure 7)
+
+```
+cd plot
+
+# Setup was already performed
+# ./setup
+
+./do-TP-every-boxplot
+```
+
+## MariaDB - Latencies (Figure 8)
+
+```
+cd plot
+
+# Setup was already performed
+# ./setup
+
+./do-OTPC-latencies
+```
+
+### Additional - Thread Pool Latencies
+
+```
+./do-TP-latencies
+```
+
+## Redis - Impact of database state on maximum query latency (Figure 9)
+
+```
+cd plot
+
+# Setup was already performed
+# ./setup
+
+./do-redis-as-fork
+```
+
+## MariaDB/Redis - Impact of patch size on patch application time (Figure 10)
+
+```
+cd plot
+
+# Setup was already performed
+# ./setup
+
+./do-patch-application
+```
+
+## MariaDB - Thread Pool comparison: Priority-based quiescence vs WfPatch (original) approach
+
+```
+./evalute-comparison-script ../data/threadpool-comparison
+```
+
