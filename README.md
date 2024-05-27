@@ -13,70 +13,25 @@ The directory [supplementary-material](supplementary-material) contains the addi
 
 The following steps give a high-level overview on how to reproduce this research. 
 
+0. Initial: Prepare the system (directory [qemu](qemu)).
 1. Crawl development history for live patchable source code changes (directory [patch-crawler](patch-crawler)).
 2. Perform experiments (directory [experiments](experiments)).
 3. Transform experiment data into a DuckDB database (directory [transformation](transformation)).
 4. Analyse results and plot charts (directory [plotting](plotting)).
 
-The experiments in step 2 must be performed on a system using the MMView Linux Kernel (https://github.com/luhsra/linux-mmview). The MMView Linux Kernel is an improved version of the original WfPatch Linux Kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux Kernel. lease note that the terms "MMView Linux Kernel" and "WfPatch Linux Kernel" can be used interchangeably.
+The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. lease note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
 
-### VM
-
-We provide a QEMU VM which is equipped (1) with the MMView Linux kernel and (2) all necessary software and libraries installed required for reproducing our results. All steps from above can be carried out within the VM. But please keep in mind that we ran our experiments directly on the system and that the overhang of the virtualization of the VM may result in slightly different measurements (since we paid close attention to latency-sensitive measurements).
-
-For detailed steps about how the VM was created, see the [qemu](qemu) directory.
-
-The following steps get you started using the VM:
-
-```
-# 1. Clone Repository
-git clone https://github.com/sdbs-uni-p/vldb-dbms-live-patching.git dbms-live-patching
-
-# 2. Go into the qemu directory
-cd dbms-live-patching/qemu
-
-# 3. Download and extract QEMU VM
-./download-vm
-
-# 4. Run VM
-# Note: The script assigns *all available main memory*
-# and *all CPU cores except for one core per CPU socket* 
-# of the host system to the VM.
-./run-vm
-
-# 5. SSH into VM (seeh credentials below)
-ssh repro@127.0.0.1 -p 2222
-
-# 6. Download the repository and prepare the used tools
-./setup
-```
-
-#### Accounts
-
-Accounts (username/password):
-
-- repro/repro
-- root/root
-
-> **_NOTE:_** In order to enable easy reproduction, security best practices were neglected. Both users are in the `sudo` group without the need for a password (`NOPASSWD` in `/etc/sudoers`).
-
-
-
-### Host System
-
-In case you want to prepare the host system to perform the reproduction, please see the notes in the [qemu](qemu) directory on how to compile the MMView Linux kernel and what software is required. We also provided a Dockerfile for each step (except the experiments) with which the respective step can be executed. However, we offer no guarantee for correct functionality. We tested all steps with the host system directly and inside the VM.
-
-## Steps
+### Steps Preparation
 
 A common set of utility tools and scripts is used throughout all steps. These tools have to be prepared before a step is executed.
 
 ```
 # Prepare common utility tools
-cd dbms-live-patching/utils
+cd utils
 ./setup
 ```
 
-Once prepared, the steps given above in [Reproduction Package](#reproduction-package) can be executed (see the respective directory for instructions).
+Once prepared, the steps (1 - 4) given above in [Reproduction Package](#reproduction-package) can be executed (see the respective directory for instructions).
 
 
 
