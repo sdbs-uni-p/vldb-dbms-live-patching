@@ -5,9 +5,14 @@ set -eu
 SCRIPT_DIR=${0:a:h}
 
 cd ${SCRIPT_DIR}
-if [ -f data-output ]; then
+if [ -f debian.img ]; then
 	echo "VM already exists!"
 	exit 0
 fi
 
-# wget ...
+# Download
+wget https://zenodo.org/records/11239473/files/debian.img.tar.xz
+# Extract
+tar xfJv debian.img.tar.xz
+rm debian.img.tar.xz
+

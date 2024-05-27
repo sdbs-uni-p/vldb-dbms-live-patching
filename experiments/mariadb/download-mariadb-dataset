@@ -4,14 +4,15 @@ set -eu
 
 SCRIPT_DIR=${0:a:h}
 
-cd ${SCRIPT_DIR}/dbms-live-patching/experiments/mariadb/
+cd ${SCRIPT_DIR}
 if [ -d data-output ]; then
 	echo "data-output already exists!"
 	exit 0
 fi
 
-wget http://drogon.sdbs.fim.uni-passau.de:9999/data-output.tar.xz
+# Download
+wget https://zenodo.org/records/11239473/files/data-output.tar.xz
+# Extract
 tar xfJv data-output.tar.xz
 rm data-output.tar.xz
-
 
