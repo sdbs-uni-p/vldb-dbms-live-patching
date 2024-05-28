@@ -95,7 +95,7 @@ apt-get install -y \
     elfutils \
     libelf-dev \
     dwarves \
-    libncurses-dev
+    libncurses-dev \
     curl \
     zsh \
     openjdk-17-jdk \
