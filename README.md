@@ -21,8 +21,7 @@ The following steps provide a high-level overview of how to reproduce this resea
 
 The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview; git hash `ecfcf9142ada6047b07643e9fa2afe439b69a5f0`). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. Please note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
 
-We provide our results, so step 1 or steps 2 and 3 can be skipped. This means experiments can be performed directly, or plots can be generated immediately.
-
+We provide our results on Zenodo (see link above), so step 1 or steps 2 and 3 can be skipped. This means experiments can be performed directly, or plots can be generated immediately.
 
 
 
