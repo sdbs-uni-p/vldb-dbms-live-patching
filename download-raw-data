@@ -11,7 +11,7 @@ if [ -d raw-data ]; then
 fi
 
 # Download
-wget https://zenodo.org/records/11239473/files/raw-data.tar.xz
+wget https://zenodo.org/api/records/11370684/draft/files/raw-data.tar.xz
 # Extract
 tar xfJv raw-data.tar.xz
 rm raw-data.tar.xz

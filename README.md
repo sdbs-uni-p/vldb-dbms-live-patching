@@ -1,8 +1,6 @@
 # Reproduction Package for the VLDB paper: ***The Case for DBMS Live Patching***
 
-[![DOI: 10.5281/zenodo.11239473](https://zenodo.org/badge/doi/10.5281/zenodo.11239473.svg)](https://doi.org/10.5281/zenodo.11239473)
-
->  **_NOTE:_** Reproduction package is WIP. A final, stable version should be available around May 31th.
+[![DOI: 10.5281/zenodo.11370684](https://zenodo.org/badge/doi/10.5281/zenodo.11370684.svg)](https://doi.org/10.5281/zenodo.11370684)
 
 This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results. Detailed descriptions and instructions are given in the `README.md` of the respective sub-directory.
 
@@ -25,14 +23,14 @@ We provide our results, so step 1 or steps 2 and 3 can be skipped. This means ex
 
 ## Original Data
 
-We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11239473). 
+We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11370684). 
 
 - Raw experiment data: 
-  - https://zenodo.org/records/11239473/files/raw-data.tar.xz
+  - https://zenodo.org/api/records/11370684/draft/files/raw-data.tar.xz
   - `./download-raw-data`
-- DuckDB databases (transformed experiment data):
-  - https://zenodo.org/records/11239473/files/duckdb-data.tar.xz
-  -  `./download-duckdb-data`
-- Download prepopulated MariaDB database directories:
-  - https://zenodo.org/records/11239473/files/data-output.tar.xz
+- Transformed experiment data:
+  - https://zenodo.org/api/records/11370684/draft/files/transformed-data.tar.xz/content
+  -  `./download-transformed-data`
+- Download MariaDB database directories:
+  - https://zenodo.org/api/records/11370684/draft/files/data-output.tar.xz/content
   -  `./experiments/mariadb/download-mariadb-dataset`
