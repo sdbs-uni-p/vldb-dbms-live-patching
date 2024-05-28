@@ -12,6 +12,3 @@ fi
 
 git clone https://github.com/sdbs-uni-p/vldb-dbms-live-patching.git dbms-live-patching
 
-cd dbms-live-patching/utils
-./setup
-
