@@ -83,7 +83,7 @@ The following is a brief summary about the steps performed to prepare the VM. Th
 apt-get update -y
 apt-get install -y \
     sudo \
-    vim \ 
+    vim \
     git \
     gcc \
     tmux \
