@@ -8,6 +8,8 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 PAPER_DIRECTORY = os.path.join(SCRIPT_DIR, "paper")
 REPRODUCTION_DIRECTORY = os.path.join(SCRIPT_DIR, "reproduction")
 
+height = st.number_input(label="PDF Height [px]", min_value=0, value=200)
+
 def get_files(directory: str) -> List[str]:
     return [f for f in os.listdir(directory) if f.endswith(".pdf")]
 
@@ -20,7 +22,7 @@ def display_pdf(file):
     with open(os.path.realpath(file), "rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
    
-    pdf_display = F'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="auto" type="application/pdf"></iframe>'
+    pdf_display = F'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="{height}px" type="application/pdf"></iframe>'
     st.markdown(pdf_display, unsafe_allow_html=True)
 
 if len(common_plots) == 0:
