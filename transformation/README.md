@@ -2,7 +2,7 @@
 
 We make use of DuckDB to analyze the benchmark data. The scripts in this directory transform the raw benchmark result into DuckDB databases.
 
-> **_NOTE:_** It is important to use DuckDB with the unmodified Linux kernel. We have experienced unforeseen crashes of DuckDB related to the MMView Linux kernel.
+> **_NOTE:_** It is important to use DuckDB with the ***unmodified*** Linux kernel. We have experienced unforeseen crashes of DuckDB related to the MMView Linux kernel.
 
 ## Linux Kernel
 
@@ -13,7 +13,7 @@ The following steps must be executed using the ***unmodified*** Linux kernel.
 cd ~
 ./kernel-regular
 sudo reboot
-```
+``
 
 ## Transformation
 
