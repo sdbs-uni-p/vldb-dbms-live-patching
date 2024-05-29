@@ -49,6 +49,11 @@ cd ${SCRIPT_DIR}/mariadb
 
 
 cd ${SCRIPT_DIR}/mariadb
-./do-every-one-thread-per-connection
-./do-every-threadpool
+./do-noop-one-thread-per-connection-every
+./do-ycsb-one-thread-per-connection-every
+./do-tpcc-one-thread-per-connection-every
+
+./do-noop-threadpool-every
+./do-ycsb-threadpool-every
+./do-tpcc-threadpool-every
 

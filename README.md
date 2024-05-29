@@ -37,7 +37,28 @@ We conducted our experiments using the following hardware:
 
 ## System Optimizations
 
+To precisely measure (tail) latencies, we performed the following system optimizations:
 
+- Disable Intel Hyper-Threading (in BIOS)
+- Operate all CPU cores at maximum frequency (see commands below)
+- The `/tmp` directory should be mapped to main memory
+
+### CPU Core Frequency
+
+Execute the following commands on the host system (Linux) to set the CPU frequency of all cores to maximum (even when idle):
+
+```
+sudo cpupower frequency-set -g performance
+
+```
+
+Once all experiments were performed, the CPU can be reset:
+
+```
+sudo cpupower frequency-set -g schedutil
+```
+
+## 
 
 ## Original Data
 
