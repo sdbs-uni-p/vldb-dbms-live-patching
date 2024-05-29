@@ -6,6 +6,8 @@ We crawl the git history of MariaDB and Redis to identify source code changes (c
 >
 > - OS: Debian Bullseye (11)
 > - GCC version: 10.2.
+
+
 To safe disk space, we do not save any intermediate data. Otherwise several TB of free disk space would be required.
 
 ## Linux Kernel
