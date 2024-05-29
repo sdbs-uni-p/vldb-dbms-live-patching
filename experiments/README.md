@@ -41,6 +41,22 @@ The results of the experiments are stored in the `~/dbms-live-patching/data` dir
 - `./download-mariadb-dataset` downloads the MariaDB database directories used by us. We recommend to execute this command before starting the experiments, to perform the benchmarks on the exactly same dataset.
 - The `benchbase-config/` directory contains the configuration files of BenchBase (benchmark framework).
 
+#### NoOp Benchmark
+
+BenchBase is a benchmarking framework written in Java. In some earlier research [1], we have shown that the Java Garbage Collector can influence latency measurements, especially when using the high-throughput NoOp (no operation) benchmark. Therefore, we use for this benchmark the Epsilon Garbage Collector and pre-allocate 140 GB of main memory. The configuration can be found in:
+
+```
+cd ~/dbms-live-patching/experiments/mariadb
+# All configuration files with the prefix:
+# config-noop*
+# The value specifying the amount of main memory used:
+# jvm_heap_size: 140
+```
+
+If you prefer to disable the Epsilon Garbage Collector (and are willing to accept potential latencies from garbage collection), simply remove the `jvm_heap_size` line.
+
+[1] Michael Fruth, Stefanie Scherzinger,Wolfgang Mauerer, and Ralf Ramsauer. 2021. *Tell-Tale Tail Latencies: Pitfalls and Perils in Database Benchmarking*. In Proc. TPCTC, Vol. 13169. 119–134.
+
 ### MariaDB - Teaser (Figure 1)
 
 ```
@@ -228,7 +244,7 @@ cd ~/dbms-live-patching/experiments/redis-all-patches
 
 ##### Description
 
-For each crawled patch that is live-patchable, two runs are performed: one applying the patch with local quiescence and one with global quiescence.
+For each crawled patch that is live-patchable, two runs are performed while Redis is under load (`GET` requests): one applying the patch with local quiescence and one with global quiescence.
 
 #### MariaDB
 
@@ -244,7 +260,7 @@ cd ~/dbms-live-patching/experiments/mariadb
 
 ##### Description
 
-For each crawled patch that is live-patchable, two runs are performed: one applying the patch with local quiescence and one with global quiescence.
+For each crawled patch that is live-patchable, two runs are performed while MariaDB is under load (NoOp benchmark): one applying the patch with local quiescence and one with global quiescence.
 
 ### MariaDB - Thread Pool comparison: Priority-based quiescence vs WfPatch (original) approach
 
@@ -261,4 +277,6 @@ cd ~/dbms-live-patching/experiments/mariadb
 
 #### Description
 
-Executes MariaDB with the thread pool policy for our priority-based quiescence approach and for the original thread pool implementation by Rommel et al. The source code modifications for Rommel et al.'s thread pool implementation are located in `~/dbms-live-patching/utils/create-patched-patch-repository/original-mariadb-live-patching`. These modifications were adapted by us to accommodate the new system calls of the MMView Linux kernel, as their original implementation was for the WfPatch Linux kernel (we made this clear with the different git patch files). To clarify, the deadlocks in their implementation are caused by the quiescence points, which is independent of the Linux kernel used and would result in the same issue with the WfPatch Linux kernel.
+Executes MariaDB with the thread pool policy for our priority-based quiescence approach and for the original thread pool implementation by Rommel et al. [2]. The source code modifications for Rommel et al.'s thread pool implementation are located in `~/dbms-live-patching/utils/create-patched-patch-repository/original-mariadb-live-patching`. These modifications were adapted by us to accommodate the new system calls of the MMView Linux kernel, as their original implementation was for the WfPatch Linux kernel (we made this clear with the different git patch files). To clarify, the deadlocks in their implementation are caused by the quiescence points, which is independent of the Linux kernel used and would result in the same issue with the WfPatch Linux kernel.
+
+[2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
