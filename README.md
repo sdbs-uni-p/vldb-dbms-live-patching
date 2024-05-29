@@ -2,14 +2,14 @@
 
 [![DOI: 10.5281/zenodo.11370684](https://zenodo.org/badge/doi/10.5281/zenodo.11370684.svg)](https://doi.org/10.5281/zenodo.11370684)
 
-This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results. Detailed descriptions and instructions are given in the `README.md` of the respective sub-directory.
+This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results.
 
 ## Supplementary Material
 The directory [supplementary-material](supplementary-material) contains the additional charts referenced in the paper.
 
 ## Reproduction Pipeline
 
-The following steps provide a high-level overview of how to reproduce this research:
+The following steps provide a high-level overview of how to reproduce this research. Please see the respective sub-directory for in-depth details about the commands to execute:
 
 0. **Initial**: Prepare the system (directory [qemu](qemu)).
 1. **Crawl Development History**: Identify live patchable source code changes (directory [patch-crawler](patch-crawler)).
@@ -34,3 +34,32 @@ We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11370684).
 - Download MariaDB database directories:
   - https://zenodo.org/records/11370684/files/data-output.tar.xz
   -  `./experiments/mariadb/download-mariadb-dataset`
+
+> **_NOTE:_** When using one of the `download-` scripts, the data is downloaded, extracted and the archive gets deleted.
+
+### raw vs. transformed data
+
+The raw data from most experiments is transformed into a DuckDB database, which is then used for all subsequent analysis and plotting. However, some experiment data is directly used for analysis and plotting without being converted into a DuckDB database. All data used for analysis and plotting is included in the "transformed" data.
+
+ The "raw" data includes the original data from which the DuckDB databases were created and is provided for reference.
+
+## Directory Overview
+
+- `supplementary-material/`
+  - Contains all supplementary material mentioned/referenced in the paper.
+- `qemu/`
+  - Location for the QEMU VM.
+- `patch-crawler/`
+  - Contains all scripts to crawl the development history of MariaDB and Redis for live patchable commits.
+- `commits/`
+  - Contains lists of live patchable commits of MariaDB and Redis, crawled by the scripts in  `patch-crawler/`
+- `experiments/`
+  - Contains all scripts to run experiments.
+- `data/`
+  - Contains empty directories in which the results of the experiments will be stored.
+- `transformation/`
+  - Contains scripts to transform experiment data into DuckDB databases.
+- `plotting/`
+  - Contains all scripts to analyze the (transformed) benchmark data and to create plots.
+- `plots/`
+  - Contains a directory in which all plots will be stored.
