@@ -45,7 +45,7 @@ uname -a
 # Linux debian 5.15.0-mmview-min #2 SMP Sun May 19 22:47:40 CEST 2024 x86_64 GNU/Linux
 ```
 
-### Accounts (username:password):
+### Credentials (username:password):
 
 - repro:repro
 - root:root
