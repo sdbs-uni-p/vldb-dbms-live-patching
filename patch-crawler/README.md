@@ -1,6 +1,6 @@
 # Patch Crawler
 
-We crawl the MariaDB and Redis git history for live patchable source code changes (commits). A detailed explanation of the executed steps is given at the [end of this document](#description).
+We crawl the git history of MariaDB and Redis to identify source code changes (commits) that can be patched live. A detailed explanation of the steps executed is provided at the [end of this document](#description). While the process of identifying patches is fully automated, it employs a brute-force method to capture as many live-patchable commits as possible, without accounting for other critical factors such as semantic changes.
 
 > **_NOTE:_**: Patch generation is highly system specific. We have noticed slight differences when the following components are deviated from:
 >
