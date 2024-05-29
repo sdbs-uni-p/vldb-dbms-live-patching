@@ -2,6 +2,8 @@
 
 This directory wraps all experiments performed. Per default, our live patchable commit lists are used (see `~/dbms-live-patching/commits`).
 
+Approximate time until all experiments are performed: 4 days.
+
 ## Linux Kernel
 
 The experiments must be executed using the ***MMView*** Linux kernel.
