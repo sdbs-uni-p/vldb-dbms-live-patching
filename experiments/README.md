@@ -262,7 +262,7 @@ cd ~/dbms-live-patching/experiments/mariadb
 
 For each crawled patch that is live-patchable, two runs are performed while MariaDB is under load (NoOp benchmark): one applying the patch with local quiescence and one with global quiescence.
 
-### MariaDB - Thread Pool comparison: Priority-based quiescence vs WfPatch (original) approach
+### MariaDB - Thread Pool comparison: Priority-based quiescence (our novel approach) vs previous (Rommel et al. [2]) approach
 
 ```
 cd ~/dbms-live-patching/experiments/mariadb
@@ -277,6 +277,6 @@ cd ~/dbms-live-patching/experiments/mariadb
 
 #### Description
 
-Executes MariaDB with the thread pool policy for our priority-based quiescence approach and for the original thread pool implementation by Rommel et al. [2]. The source code modifications for Rommel et al.'s thread pool implementation are located in `~/dbms-live-patching/utils/create-patched-patch-repository/original-mariadb-live-patching`. These modifications were adapted by us to accommodate the new system calls of the MMView Linux kernel, as their original implementation was for the WfPatch Linux kernel (we made this clear with the different git patch files). To clarify, the deadlocks in their implementation are caused by the quiescence points, which is independent of the Linux kernel used and would result in the same issue with the WfPatch Linux kernel.
+Executes MariaDB with the thread pool policy by comparing our novel priority-based quiescence approach with the previous approach by Rommel et al. [2]. The source code modifications for Rommel et al.'s thread pool quiescence points are located in `~/dbms-live-patching/utils/create-patched-patch-repository/original-mariadb-live-patching`. These modifications were adapted by us to accommodate the new system calls of the MMView Linux kernel, as their original implementation was for the WfPatch Linux kernel (we made this clear with the different git patch files). To clarify, the deadlocks in their implementation are caused by their *quiescence points*, which are independent of the Linux kernel used and would result in the same issue with the WfPatch Linux kernel.
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
