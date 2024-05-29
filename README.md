@@ -31,7 +31,7 @@ We conducted our experiments using the following hardware:
   - 24 cores/48 threads per CPU
   - 3.0 GHz
 - Main Memory: 384 GB
-- Disk: 1.5 TB
+- Disk: 1.5 TB SSD
 
 > **_NOTE:_** Our experiments use CPU pinning tailored to the specific number of CPU cores in our hardware. You may need to adjust some values to match your hardware configuration. Detailed instructions for these adjustments are provided in the steps as needed.
 
