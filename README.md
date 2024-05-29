@@ -17,9 +17,27 @@ The following steps provide a high-level overview of how to reproduce this resea
 3. **Transform Experiment Data**: Convert experiment data into a DuckDB database (directory [transformation](transformation)).
 4. **Analyze Results and Plot Charts**: Analyze the results and generate plots (directory [plotting](plotting)).
 
+> **_NOTE:_** The README is designed for executing all commands within the QEMU VM. However, these commands can be easily adapted for use on your own prepared system.
+
 The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview; git hash `ecfcf9142ada6047b07643e9fa2afe439b69a5f0`). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. Please note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
 
 We provide our results, so step 1 or steps 2 and 3 can be skipped. This means experiments can be performed directly, or plots can be generated immediately (but you may have to move/rename some directories to match the expected names/locations).
+
+## Hardware
+
+We conducted our experiments using the following hardware:
+
+- CPU: 2x Intel Xeon Gold 6248R
+  - 24 cores/48 threads per CPU
+  - 3.0 GHz
+- Main Memory: 384 GB
+- Disk: 1.5 TB
+
+> **_NOTE:_** Our experiments use CPU pinning tailored to the specific number of CPU cores in our hardware. You may need to adjust some values to match your hardware configuration. Detailed instructions for these adjustments are provided in the steps as needed.
+
+## System Optimizations
+
+
 
 ## Original Data
 

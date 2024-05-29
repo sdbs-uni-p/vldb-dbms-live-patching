@@ -1,18 +1,16 @@
 # Patch Crawler
 
-We crawl the MariaDB and Redis git history for live patchable source code changes (commits).
+We crawl the MariaDB and Redis git history for live patchable source code changes (commits). A detailed explanation of the executed steps is given at the [end of this document](#description).
 
 > **_NOTE:_**: Patch generation is highly system specific. We have noticed slight differences when the following components are deviated from:
-- OS: Debian Bullseye (11)
-- GCC version: 10.2.
-
-We assume the following steps are executed within the VM. At the end of this README, we provide commands using the Docker container.
-
+>
+> - OS: Debian Bullseye (11)
+> - GCC version: 10.2.
 To safe disk space, we do not save any intermediate data. Otherwise several TB of free disk space would be required.
 
 ## Linux Kernel
 
-The following steps should be executed using the ***unmodified*** Linux kernel.
+Patch crawling should be done using the ***unmodified*** Linux kernel.
 
 ```
 # Inside the VM:
@@ -23,15 +21,21 @@ sudo reboot
 
 ## Crawl MariaDB Commit History
 
-Crawling the MariaDB commit history and selecting suitable patches is a multi-step process:
+Crawling the MariaDB commit history and selecting suitable patches is a multi-step process. Each step creates a list of commits which are potentially patchable, with more restrictions being applied with each step. The commit lists are stored in `~/dbms-live-patching/commits`.
 
-1. Find commits patchable via Kpatch
+1. Find commits patchable via Kpatch 
+   - MariaDB output: `mariadb.commits.success`
+   - Redis output: `redis.commits.success`
 2. Apply the MariaDB source code changes (WfPatch integration etc.) to the patchable versions
+   - MariaDB output: `mariadb.commits.success.wfpatch` and `mariadb.commits.success.wfpatch.original`
+   - Redis output: `redis.commits.success.wfpatch` and `redis.commits.success.wfpatch.original`
 3. Analyze MariaDB patches using perf, to identify patches that affect a specific functionality of MariaDB.
+   - MariaDB output: ` mariadb.commits.success.wfpatch.perf.original`
 
 The following script includes all commands that follow in this section. This means the entire analysis can be carried out fully automatically.
 
 ```
+cd ~/dbms-live-patching/patch-crawler
 # Executes all commands of this README for MariaDB
 ./do-all-mariadb
 ```
@@ -49,7 +53,7 @@ The directory `~/dbms-live-patching/commits/paper` contains the commit lists tha
 ### 1. Find commits patchable via Kpatch
 
 ```
-cd crawl-mariadb
+cd ~/dbms-live-patching/patch-crawler/crawl-mariadb
 ```
 
 The MariaDB git history is crawled by using the commit range specified in the file `commits-to-analyze`. The range should be separated with `..` as the content is injected into a git command. The default range is `mariadb-10.5.0..mariadb-10.5.13` and results in about 4,600 commits to analyze. For each commit, we perform the following steps:
@@ -96,12 +100,12 @@ output/
 	patches/
 ```
 
-The directory `output/builds/` contains all the git repositories used for building MariaDB. The `output/patches/` directory contains all analyzed commits and the respective patch files.
+The directory `output/builds/` contains all the git repositories used for building MariaDB (these can be deleted after crawling). The `output/patches/` directory contains all analyzed commits and the respective patch files.
 
 #### Patch Analysis
 
 ```
-cd analysis
+cd ~/dbms-live-patching/patch-crawler/analysis
 ```
 
 The previous step results in a directory containing the generated patches (`output/patches`). When patches for a source code change (i.e. git commit) are generated, there may be two possible states: success and partial success (difference is explained below). Our further analysis uses only commits having the **success** status. 
@@ -167,7 +171,7 @@ output/patches/<COMMIT>/
 ### 2. Apply the MariaDB source code changes to the patchable versions
 
 ```
-cd create-patched-patch-repository
+cd ~/dbms-live-patching/patch-crawler/create-patched-patch-repository
 ```
 
 We try to automatically apply the MariaDB source code changes (WfPatch integration, quiescence points etc.) to the MariaDB repository. We prepared our source code changes for three different versions of MariaDB for a higher success rate; in particular for git version `mariadb-10.5.0`, `mariadb-10.5.13` and for commit `18502f99eb24f37d11e2431a89fd041cbdaea621`.
@@ -204,7 +208,7 @@ cat $RESULT_DIR/mariadb.commits.success.wfpatch | sed 's/^wfpatch\.patch-//' > $
 ### 3. Analyze MariaDB patches using perf
 
 ```
-cd mariadb-perf-analysis
+cd ~/dbms-live-patching/patch-crawler/mariadb-perf-analysis
 ```
 
 We want to identify patches that affect transactions of MariaDB, i.e. patches that may have an affect when applied. We perform the following steps:
@@ -260,7 +264,40 @@ Crawling the Redis Commit History for patchable commits is used similar to Maria
 
 ---
 
+---
+
 ## Docker Container
 
-See the [container](container) directory for details.
+We cannot guarantee the correct functionality of the Docker container; however, it is designed to crawl patches without requiring the VM. For more information, please refer to the [container](container) directory.
 
+---
+
+## Description
+
+The basic functionality of our pipeline for automatically finding live patches based on the development history (git history) is described here. This description applies to MariaDB and Redis..
+
+### 1. Compile & Generate Patch
+
+In the first step, we extract all commits of the git history from a defined range by excluding merge commits. Each extracted git hash represents a pair: the git hash itself (also referred as "new") and its parent (also referred as "old"). Due to the exclusion of merge commits, there is always only one parent. We compile each pair (old and new) and compare the compiled object files of both compilations. If an object file differs between the two versions, we try to generate a patch using the WfPatch modified version of Kpatch. As a consequence, the patch is specific to the pair: The old version of the database can be started and the patch will apply the changes to make the database run in the new version. 
+
+Patch generation is considered successful if (1) object files differ and (2) for **all** deviating object files, a corresponding patch file is created. One deviating object file results in one patch file for live patching. In other words, a commit that makes changes to multiple source code files technically results in multiple patch files.
+
+- For MariaDB (git tag `mariadb-10.5.0` -- `mariadb-10.5.13`), Kpatch was successful for 416 out of 4,613 commits.
+- For Redis (git tag `5.0.0` -- `7.0.11`), Kpatch was successful for 937 out of 3,580 commits.
+
+### 2. Source Code Preparation
+
+The code changes, i.e. the implementation of the quiescence points, have to be applied to the respective source code versions since each of the commits found represents a different source code state. To increase the chance of an automatic application of the code changes, it is better to prepare the quiescence points for different source code versions. For MariaDB and Redis, we prepared for each three different git patches that apply the same source code changes. For each application, we used the start, end and a source code version in between of the respective commit range. To automatically apply the changes, we use git patch. Once the source code changes could be applied successfully, the application is compiled again to ensure that the source code modifications did not break the source code.
+
+- For MariaDB, 117 out of 416 source code versions were successfully applied. 
+- For Redis, 529 out of 937 source code versions were successfully applied. 
+
+### 3. Stack Tracing (MariaDB only)
+
+The final step ensures that the patched function is also in the stack trace of our quiescence points. This step was only done to select the five patches (patch ID~\#1 -- ID~\#5) for MariaDB.
+
+After applying the source code changes, we want to ensure that the patched function is at least executed and a function that is in the call stack of `do_command`. For this, we compile MariaDB with debug flags and execute it while tracing all function calls using `perf`. We execute the benchmarks NoOp, YCSB and TPC-C once to generate some load and to monitor the function paths that are executed. 
+
+Subsequently, we check whether the functions affected by the patch exists in the recorded trace data: We compare the compiled object files of the old and the new version, that make up the patch, and extract the name of all changed function names. These names are checked whether they exist in the `perf` data. Additionally, we keep only patches for which the function is at least in the call tree of `do\_command`, which finally resulted in 17 patches.
+
+We manually reviewed all 17 patches and checked whether the commit is tracked by MariaDBs bug tracker Jira. For in total eight commits, we found a corresponding entry in Jira and six of them were of type ``Bug''. Five of the bugs affect the core of MariaDB, i.e. resulting in the patches used for our experiments.
