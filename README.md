@@ -74,7 +74,7 @@ We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11370684).
   - https://zenodo.org/records/11370684/files/data-output.tar.xz
   -  `./experiments/mariadb/download-mariadb-dataset`
 
-> **_NOTE:_** When using one of the `download-` scripts, the data is downloaded, extracted and the archive gets deleted.
+> **_NOTE:_** When using one of the `download-` scripts, the data is downloaded, extracted and the downloaded archive gets deleted.
 
 ### raw vs. transformed data
 
