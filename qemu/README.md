@@ -2,13 +2,7 @@
 
 We provide a QEMU VM which is equipped (1) with the MMView Linux kernel and (2) all necessary software and libraries installed required for executing our scripts/tools. All steps of the reproduction package can be executed within the VM. But please keep in mind that we ran our experiments directly on the system and that the overhang of the virtualization of the VM may result in slightly different measurements (since we paid close attention to latency-sensitive measurements).
 
-You can either reproduce our results by using the [Host System](#host-system) directly or by using our pre-defined [QEMU VM](#qemu-vm).
-
-## Host System
-
-In case you want to prepare the host system for the execution of all scripts, i.e. reproducing the results, please see the notes below on how to compile the MMView Linux kernel and what software is required. Please use **Debian 11 (bullseye)** as host system.
-
-We also provided a `Dockerfile` for each reproduction step (except the experiments). However, we have validated the correct functionality of our reproduction pipeline using the host system and the VM, but not with the `Dockerfiles`.
+You can reproduce our results either by using our pre-defined [QEMU VM](#qemu-vm) or by preparing a [Host System](#host-system) to execute experiments directly on the server.
 
 ## QEMU VM
 
@@ -80,6 +74,12 @@ sudo reboot
 ### Additional Material
 
 - [vm-scripts/](vm-scripts): This directory contains scripts that are used inside the VM.
+
+## Host System
+
+In case you want to prepare the host system for the execution of all scripts, i.e. reproducing the results, please see the notes below on how to compile the MMView Linux kernel and what software is required. Please use **Debian 11 (bullseye)** as host system.
+
+We also provided a `Dockerfile` for each reproduction step (except the experiments). However, we have validated the correct functionality of our reproduction pipeline using the host system and the VM, but not with the `Dockerfiles`.
 
 ### VM Preparation Notes
 
