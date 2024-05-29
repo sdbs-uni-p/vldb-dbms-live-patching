@@ -26,11 +26,11 @@ We provide our results, so step 1 or steps 2 and 3 can be skipped. This means ex
 We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11370684). 
 
 - Raw experiment data: 
-  - https://zenodo.org/api/records/11370684/draft/files/raw-data.tar.xz
+  - https://zenodo.org/records/11370684/files/raw-data.tar.xz
   - `./download-raw-data`
 - Transformed experiment data:
-  - https://zenodo.org/api/records/11370684/draft/files/transformed-data.tar.xz/content
+  - https://zenodo.org/records/11370684/files/transformed-data.tar.xz
   -  `./download-transformed-data`
 - Download MariaDB database directories:
-  - https://zenodo.org/api/records/11370684/draft/files/data-output.tar.xz/content
+  - https://zenodo.org/records/11370684/files/data-output.tar.xz
   -  `./experiments/mariadb/download-mariadb-dataset`

@@ -11,7 +11,7 @@ if [ -d transformed-data ]; then
 fi
 
 # Download
-wget https://zenodo.org/api/records/11370684/draft/files/transformed-data.tar.xz/content
+wget https://zenodo.org/records/11370684/files/transformed-data.tar.xz
 # Extract
 tar xfJv transformed-data.tar.xz
 rm transformed-data.tar.xz

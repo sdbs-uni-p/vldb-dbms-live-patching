@@ -11,7 +11,7 @@ if [ -d data-output ]; then
 fi
 
 # Download
-wget https://zenodo.org/api/records/11370684/draft/files/data-output.tar.xz/content
+wget https://zenodo.org/records/11370684/files/data-output.tar.xz
 # Extract
 tar xfJv data-output.tar.xz
 rm data-output.tar.xz

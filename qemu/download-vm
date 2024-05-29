@@ -11,7 +11,7 @@ if [ -f debian.img ]; then
 fi
 
 # Download
-wget https://zenodo.org/api/records/11370684/draft/files/debian.img.tar.xz/content
+wget https://zenodo.org/records/11370684/files/debian.img.tar.xz
 # Extract
 tar xfJv debian.img.tar.xz
 rm debian.img.tar.xz
