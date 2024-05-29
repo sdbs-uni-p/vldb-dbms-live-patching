@@ -34,7 +34,7 @@ Crawling the MariaDB commit history and selecting suitable patches is a multi-st
 3. Analyze MariaDB patches using perf, to identify patches that affect a specific functionality of MariaDB.
    - MariaDB output: ` mariadb.commits.success.wfpatch.perf.original`
 
-The following script includes all commands that follow in this section. This means the entire analysis can be carried out fully automatically.
+The following script encompasses all the commands detailed in this section, allowing the entire analysis to be executed automatically. However, it is advisable to review all the steps in this document beforehand to carefully consider the number of parallel builds, as this can significantly impact your system's performance.
 
 ```
 cd ~/dbms-live-patching/patch-crawler
