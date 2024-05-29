@@ -45,7 +45,7 @@ cd ~/dbms-live-patching/patch-crawler
 For the detailed steps, we make use of the following variable to specify the directory in which the list of live patchable commits is stored:
 
 ```
-export RESULT_DIR="~/dbms-live-patching/commits/reproduction/"
+export RESULT_DIR=~/dbms-live-patching/commits/reproduction
 ```
 
 ### Commits
