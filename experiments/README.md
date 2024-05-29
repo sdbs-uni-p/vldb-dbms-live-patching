@@ -226,6 +226,10 @@ cd ~/dbms-live-patching/experiments/redis-all-patches
 ./benchmark
 ```
 
+##### Description
+
+For each crawled patch that is live-patchable, two runs are performed: one applying the patch with local quiescence and one with global quiescence.
+
 #### MariaDB
 
 ```
@@ -237,6 +241,10 @@ cd ~/dbms-live-patching/experiments/mariadb
 ./do-noop-one-thread-per-connection-all
 ./do-noop-threadpool-all
 ```
+
+##### Description
+
+For each crawled patch that is live-patchable, two runs are performed: one applying the patch with local quiescence and one with global quiescence.
 
 ### MariaDB - Thread Pool comparison: Priority-based quiescence vs WfPatch (original) approach
 
@@ -251,3 +259,6 @@ cd ~/dbms-live-patching/experiments/mariadb
 ./do-tpcc-threadpool-comparison
 ```
 
+#### Description
+
+Executes MariaDB with the thread pool policy for our priority-based quiescence approach and for the original thread pool implementation by Rommel et al. The source code modifications for Rommel et al.'s thread pool implementation are located in `~/dbms-live-patching/utils/create-patched-patch-repository/original-mariadb-live-patching`. These modifications were adapted by us to accommodate the new system calls of the MMView Linux kernel, as their original implementation was for the WfPatch Linux kernel (we made this clear with the different git patch files). To clarify, the deadlocks in their implementation are caused by the quiescence points, which is independent of the Linux kernel used and would result in the same issue with the WfPatch Linux kernel.
