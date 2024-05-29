@@ -133,28 +133,89 @@ Executes the NoOp, YCSB, and TPC-C benchmarks while triggering patch application
 
 ### Redis - Impact of database state on maximum query latency (Figure 9)
 
+***CAUTION:*** This experiment is ***highly system dependent***, i.e. you may have to tweak some parameters to match your system (all details explained below).
+
 ```
-cd redis-fork-vs-wfpatch
+cd ~/dbms-live-patching/experiments/redis-fork-vs-wfpatch
 ./benchmark
 ```
 
-#### Notes
+#### Description
 
-- Running this experiment directly on our server (without using the VM) consumes up to 366 GiB of main memory. Since our server has 374 GiB and the VM introduces additional overhead, the experiment cannot be fully completed in the VM due to insufficient main memory.
-  
-  - To avoid running through all configured options, you can modify the following line:
+In this experiment, Redis is loaded with data using `SET` requests to achieve a large memory state. While Redis remains under load from these `SET` requests, we perform the following action once, each in a separate run: (1) do nothing, (2) execute a `fork`, and (3) clone an address space. The latency of each `SET` request is measured. This experiment is repeated across 200 different memory states.
 
-    ```bash
-    for action_after_sleep in `seq 1 200`; do
-    ```
+##### System Dependent Options
 
-    We used an upper value of `175` (instead of `200`) when reproducing this experiment in the VM. This slight modification does not impact the overall result, as the time required for fork/address space cloning increases linearly, which can also be validated with a smaller upper limit.
+```
+# Open the benchmark script, e.g.:
+vim benchmark
+```
 
-- The script employs CPU pinning. Adjust it based on the number of CPU cores available:
+###### Queries per Second
 
-  ```bash
-  taskset -c ...
-  ```
+The script makes assumptions about the queries per second (QPS) executed on the system. Here's a high-level overview of how the script functions:
+
+1. Start Redis.
+2. Start the Redis benchmark issuing `SET` requests.
+3. While the Redis benchmark is running, wait for a certain period to load the memory state.
+4. Apply the respective action (nothing, `fork`, or address space cloning) while the benchmark is still active.
+5. Wait until the benchmark completes.
+
+It is crucial to perform the respective action while the benchmark is still running. We estimate the total duration of the benchmark based on the queries per second, which depends on the hardware used. The following script illustrates the process in detail (modified slightly for better explanation; the actual code is in the `benchmark` script):
+
+```bash
+qps=4500
+for load_duration in `seq 1 200`; do
+    for method in nothing fork clone; do
+        # Add 10 seconds which is needed to perform the action
+        total_queries=$((qps * (load_duration + 10)))
+				
+				# Start Redis
+        ./redis-server ... & 
+        sleep 2
+        
+        # Start Redis benchmark
+        ./redis-benchmark -t set -n $total_queries ... &
+        # Wait $load_duration seconds
+        sleep $load_duration
+        
+        # Perform action
+        echo ${method} > /tmp/trigger-redis
+```
+
+> Having an accurate QPS value is essential. If the QPS is too low, the Redis benchmark may finish before the action (such as a fork or address space cloning) can be performed. This would prevent the benchmark from recording the latency of these actions or their impact on the client side. Therefore, a precise QPS value is critical.
+
+We provide a small script to determine the number of queries per second on your system:
+
+```bash
+./find-qps
+
+# Output:
+"test","rps","avg_latency_ms","min_latency_ms","p50_latency_ms","p95_latency_ms","p99_latency_ms","max_latency_ms"
+"SET","4606.17","2.158","0.448","2.143","2.191","3.231","5.183"
+
+# 4606.17 represents the number of queries per second (or in Redis terms, requests per second (rps))
+```
+
+Please note, we used a QPS value of `4500` in our configuration. Using a higher or lower value may result in more or less memory consumption, respectively.
+
+###### Maximum Main Memory
+
+Running this experiment directly on our server (without using the VM) consumes up to 366 GiB of main memory. Since our server has 374 GiB and the VM introduces additional overhead, the experiment cannot be fully completed in the VM due to insufficient main memory. The following sequence controls the number of memory states used, the higher the number, the larger the memory state:
+
+```bash
+for action_after_sleep in `seq 1 200`; do
+```
+
+We used an upper value of `175` (instead of `200`) when reproducing this experiment in the VM. This slight modification does not impact the overall result, as the time required for fork/address space cloning increases linearly, which can also be validated with a smaller upper limit.
+
+###### CPU Pinning
+
+The script employs CPU pinning. Adjust it based on the number of CPU cores available:
+
+```bash
+taskset -c ...
+```
 
 ### MariaDB/Redis - Impact of patch size on patch application time (Figure 10)
 
