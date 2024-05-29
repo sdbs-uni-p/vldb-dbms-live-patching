@@ -28,7 +28,7 @@ cd dbms-live-patching/qemu
 # of the host system to the VM.
 ./run-vm
 
-# 5. SSH into VM (seeh credentials below)
+# 5. SSH into VM (see credentials below)
 ssh repro@127.0.0.1 -p 2222
 
 # 6. Inside the VM:
