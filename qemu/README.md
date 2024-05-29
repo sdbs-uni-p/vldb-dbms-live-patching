@@ -2,6 +2,8 @@
 
 We provide a QEMU VM which is equipped (1) with the MMView Linux kernel and (2) all necessary software and libraries installed required for executing our scripts/tools. All steps of the reproduction package can be executed within the VM. But please keep in mind that we ran our experiments directly on the system and that the overhang of the virtualization of the VM may result in slightly different measurements (since we paid close attention to latency-sensitive measurements).
 
+You can either reproduce our results by using the [Host System](#host-system) directly or by using our pre-defined [QEMU VM](#qemu-vm).
+
 ## Host System
 
 In case you want to prepare the host system for the execution of all scripts, i.e. reproducing the results, please see the notes below on how to compile the MMView Linux kernel and what software is required. Please use **Debian 11 (bullseye)** as host system.
@@ -32,18 +34,15 @@ cd dbms-live-patching/qemu
 ssh repro@127.0.0.1 -p 2222
 
 # 6. Inside the VM:
-# Download the repository and prepare the used tools
+# Download the repository
 ./setup
-```
 
-### Preparation
-
-A common set of utility tools and scripts is used throughout the entire reproduction pipeline. These tools need to be prepared before executing any step. If you have already run the `~/setup` script (inside the VM), the utility tools are ready to use. Otherwise, you can set them up manually:
-
-```
-# Prepare common utility tools
-cd utils
-./setup
+# 7. Check current Linux kernel
+uname -a
+# Unmodified Linux kernel:
+# Linux debian 5.15.0-0.bpo.3-amd64 #1 SMP Debian 5.15.15-2~bpo11+1 (2022-02-03) x86_64 GNU/Linux
+# MMView Linux kernel:
+# Linux debian 5.15.0-mmview-min #2 SMP Sun May 19 22:47:40 CEST 2024 x86_64 GNU/Linux
 ```
 
 ### Accounts (username:password):
@@ -53,12 +52,20 @@ cd utils
 
 > **_NOTE:_** In order to enable easy reproduction, security best practices were neglected. Both users are in the `sudo` group without the need for a password (`NOPASSWD` in `/etc/sudoers`).
 
+### Preparation
+
+A common set of utility tools and scripts is used throughout the entire reproduction pipeline. These tools need to be prepared before executing any step:
+
+```
+cd ~/dbms-live-patching/utils
+./setup
+```
+
 ### Switching Kernel
 
 To reproduce our results, we require both the unmodified Linux kernel and the MMView Linux kernel. The VM includes scripts facilitating the easy switching of kernels:
 
 ```
-# ssh into VM as repro user
 cd ~
 
 # Enable MMView Linux kernel
@@ -72,11 +79,11 @@ sudo reboot
 
 ### Additional Material
 
-- [vm-scripts/](vm-scripts): Contains scripts that are used inside the VM.
+- [vm-scripts/](vm-scripts): This directory contains scripts that are used inside the VM.
 
 ### VM Preparation Notes
 
-The following is a brief summary about the steps performed to prepare the VM. These steps can be used as a basis for preparing a host system.
+The following is a brief summary about the steps performed to prepare the VM. These steps can be used as a basis for preparing a new system for our reproduction pipeline.
 
 ```
 # Install software
@@ -176,6 +183,7 @@ make menuconfig
 
 # Set in .config
 # - CONFIG_LOCALVERSION="-mmview-min"
+# Disable the CONFIG_ options mentioned above
 
 make -j
 sudo make install
@@ -188,6 +196,7 @@ make oldconfig
 
 # Set in .config
 # - CONFIG_LOCALVERSION="-mmview"
+# Disable the CONFIG_ options mentioned above
 
 make -j
 sudo make modules_install
