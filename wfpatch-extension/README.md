@@ -20,6 +20,10 @@ To easily visualize our extensions to the MariaDB source code (for git tag `mari
 
 The artifacts by Rommel et al. [2] contain two different source code modifications to MariaDB. Both versions are included as git patches in the `rommel/` directory (`mariadb-wf-10.3.15.patch` and `mariadb-wf-10.5.patch`). However, we cannot provide a git patch highlighting the differences between our implementation and theirs, as we implemented our source code extension from scratch. As explained in our paper, we adapted the quiescence points for the one-thread-per-connection policy from Rommel et al. [2], while we developed a novel priority-based quiescence approach for the thread pool policy.
 
+## Kpatch
+
+The extension by Rommel et al. [2] for Kpatch is available as a git patch in `rommel/kpatch.patch`. We did not make further extensions or modifications to Kpatch; instead, we updated the version to 0.9.5 (`kpatch.patch`).
+
 ---
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
