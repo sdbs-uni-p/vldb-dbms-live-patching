@@ -1,25 +1,33 @@
-From 208fb482eb22b5f5b22978285e878a42ec73b624 Mon Sep 17 00:00:00 2001
+From ac654a0ef9955a37b846ed721b367df14a9527c9 Mon Sep 17 00:00:00 2001
 From: Michael Fruth <Michael.Fruth@uni-passau.de>
 Date: Mon, 6 Dec 2021 12:01:53 +0100
-Subject: [PATCH] WfPatch Preparation
+Subject: [PATCH] Added live patching capabilities.
 
-Add functionality to trigger patches and to measure additionaly data.
 ---
- .../java/com/oltpbenchmark/DBWorkload.java    |  37 +++-
+ .../java/com/oltpbenchmark/DBWorkload.java    |  42 +++-
+ .../java/com/oltpbenchmark/LatencyRecord.java |   3 +
  .../java/com/oltpbenchmark/ThreadBench.java   |   2 +
  src/main/java/com/oltpbenchmark/WfPatch.java  | 201 ++++++++++++++++++
  .../java/com/oltpbenchmark/api/Worker.java    |  10 +-
  .../collectors/DBParameterCollectorGen.java   |  23 +-
  .../benchmarks/chbenchmark/queries/Q15.java   |  95 +++++----
  .../com/oltpbenchmark/util/ResultWriter.java  |  26 ++-
- 7 files changed, 338 insertions(+), 56 deletions(-)
+ 8 files changed, 346 insertions(+), 56 deletions(-)
  create mode 100644 src/main/java/com/oltpbenchmark/WfPatch.java
 
 diff --git a/src/main/java/com/oltpbenchmark/DBWorkload.java b/src/main/java/com/oltpbenchmark/DBWorkload.java
-index 3a7f87aa..38874828 100644
+index 3a7f87aa..0a617a92 100644
 --- a/src/main/java/com/oltpbenchmark/DBWorkload.java
 +++ b/src/main/java/com/oltpbenchmark/DBWorkload.java
-@@ -365,6 +365,7 @@ public class DBWorkload {
+@@ -45,6 +45,7 @@ import java.sql.SQLException;
+ import java.util.*;
+ 
+ public class DBWorkload {
++    public static boolean DO_MEASURE_LATENCY = true;
+     private static final Logger LOG = LoggerFactory.getLogger(DBWorkload.class);
+ 
+     private static final String SINGLE_LINE = StringUtil.repeat("=", 70);
+@@ -365,6 +366,7 @@ public class DBWorkload {
  
  
                  wrkld.addPhase(i, time, warmup, rate, weights, rateLimited, disabled, serial, timed, activeTerminals, arrival);
@@ -27,10 +35,13 @@ index 3a7f87aa..38874828 100644
              }
  
              // CHECKING INPUT PHASES
-@@ -458,6 +459,27 @@ public class DBWorkload {
+@@ -458,6 +460,30 @@ public class DBWorkload {
          // Execute Workload
          if (isBooleanOptionSet(argsLine, "execute")) {
              // Bombs away!
++            if (argsLine.hasOption("skip-latency-recording")) {
++                DBWorkload.DO_MEASURE_LATENCY = false;
++            }
 +        	if (argsLine.hasOption("patch")) {
 +				WfPatch wfpatch = WfPatch.getInstance();
 +				
@@ -55,18 +66,19 @@ index 3a7f87aa..38874828 100644
              try {
                  Results r = runWorkload(benchList, intervalMonitor);
                  writeOutputs(r, activeTXTypes, argsLine, xmlConfig);
-@@ -487,6 +509,10 @@ public class DBWorkload {
+@@ -487,6 +513,11 @@ public class DBWorkload {
          options.addOption(null, "clear", true, "Clear all records in the database for this benchmark");
          options.addOption(null, "load", true, "Load data using the benchmark's data loader");
          options.addOption(null, "execute", true, "Execute the benchmark workload");
 +		options.addOption(null, "patch", true, "Execute patch in the middle of the time");
++		options.addOption(null, "skip-latency-recording", true, "Do not record latencies.");
 +		options.addOption(null, "patch-time", true, "After which time should the patch be applied. Default = 1/2 * benchmark time.");
 +		options.addOption(null, "patch-every", true, "Patch every X seconds.");
 +		options.addOption(null, "patch-trigger-signal", true, "The trigger signal used for triggering patch application.");
          options.addOption("h", "help", false, "Print this help");
          options.addOption("s", "sample", true, "Sampling window");
          options.addOption("im", "interval-monitor", true, "Throughput Monitoring Interval in milliseconds");
-@@ -570,10 +596,19 @@ public class DBWorkload {
+@@ -570,10 +601,19 @@ public class DBWorkload {
  
          int windowSize = Integer.parseInt(argsLine.getOptionValue("s", "5"));
  
@@ -87,6 +99,20 @@ index 3a7f87aa..38874828 100644
          }
  
          String sampleFileName = baseFileName + ".samples.csv";
+diff --git a/src/main/java/com/oltpbenchmark/LatencyRecord.java b/src/main/java/com/oltpbenchmark/LatencyRecord.java
+index 0525d23f..1d77a346 100644
+--- a/src/main/java/com/oltpbenchmark/LatencyRecord.java
++++ b/src/main/java/com/oltpbenchmark/LatencyRecord.java
+@@ -50,6 +50,9 @@ public class LatencyRecord implements Iterable<LatencyRecord.Sample> {
+     }
+ 
+     public void addLatency(int transType, long startNanosecond, long endNanosecond, int workerId, int phaseId) {
++        if (!DBWorkload.DO_MEASURE_LATENCY) {
++            return;
++        }
+ 
+ 
+         if (nextIndex == ALLOC_SIZE) {
 diff --git a/src/main/java/com/oltpbenchmark/ThreadBench.java b/src/main/java/com/oltpbenchmark/ThreadBench.java
 index 2c143a65..7f152c76 100644
 --- a/src/main/java/com/oltpbenchmark/ThreadBench.java
@@ -558,5 +584,5 @@ index ae3aff33..07e1b64f 100644
  
  
 -- 
-2.42.0
+2.30.2
 
