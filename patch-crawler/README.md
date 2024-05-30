@@ -13,7 +13,7 @@ To safe disk space, we do not save any intermediate data. Otherwise several TB o
 Approximate time until all patches are crawled:
 
 - MariaDB: 4 days.
-- Redis: 1 day.
+- Redis: 2 hours
 
 ## Linux Kernel
 
