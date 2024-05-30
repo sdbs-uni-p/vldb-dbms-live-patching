@@ -17,16 +17,16 @@ sudo reboot
 
 All plots will be stored in `~/dbms-live-patching/plots/reproduction`. The directory `~/dbms-live-patching/plots/paper` contains all plots from the paper, including additional ones referenced or mentioned therein. To compare the results of your reproduction pipeline with our plots, you can use the scripts in the `~/dbms-live-patching/plots` directory.
 
-To start a webserver for easy comparison of charts, use the following commands:
+To start a web-server for easy comparison of charts, use the following commands:
 
 ```bash
 cd ~/dbms-live-patching/plots
 
-# Starts a webserver (streamlit) for easy chart comparison
+# Starts a web-server (streamlit) for easy chart comparison
 ./run
 ```
 
-This script starts a webserver (you may need to expose the port if running inside a VM) that allows you to compare our plots with those from your reproduction pipeline side-by-side.
+This script starts a web-server (you may need to expose the port if running inside a VM) that allows you to compare our plots with those from your reproduction pipeline side-by-side.
 
 ## All Plots (Figure 1 and 5 - 10)
 
