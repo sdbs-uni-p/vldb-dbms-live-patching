@@ -82,7 +82,7 @@ The raw data from most experiments is transformed into a DuckDB database, which 
 
 ## WfPatch Extension
 
-Please see the [wfpatch-extension](wfpatch-extension) directory for a detailed overview of our extension to the WfPatch user space library and the original work of Rommel et al. [2].
+Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detailed overview of our extensions to the WfPatch user space library, as well as the original work by Rommel et al. [2]. To ensure clarity regarding the distinctions between the original work and our contributions, we have created this section. Here, we explicitly outline the nature and extent of our modifications, as it is not always feasible to differentiate these changes directly within the reproduction package.
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
 
