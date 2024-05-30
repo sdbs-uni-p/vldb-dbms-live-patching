@@ -17,7 +17,6 @@ qemu-system-x86_64 \
   -m ${total_mem_mb} \
   -cpu host \
   -smp sockets=$sockets,cores=$cores_per_socket,threads=$threads_per_core \
-  -nographic \
   -device e1000,netdev=net0 \
   -netdev user,id=net0,hostfwd=tcp:127.0.0.1:2222-:22
 
