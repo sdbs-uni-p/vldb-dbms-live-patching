@@ -1,0 +1,276 @@
+From f93ee51fccc5aea281fbbec59dbafd9b39d78822 Mon Sep 17 00:00:00 2001
+From: Daniel Friesel <derf@finalrewind.org>
+Date: Fri, 20 Mar 2020 13:50:36 +0100
+Subject: [PATCH] backport wait-free code patching
+
+---
+ .gitmodules               |  3 ++
+ WAITFREE                  | 61 +++++++++++++++++++++++++++++++++++++++
+ include/wf-userland.h     |  1 +
+ sql/CMakeLists.txt        |  3 ++
+ sql/mysqld.cc             | 30 +++++++++++++++++++
+ sql/sql_connect.cc        | 25 ++++++++++++++--
+ sql/threadpool_generic.cc |  5 ++++
+ sql/wf-userland.c         |  1 +
+ wf-userland               |  1 +
+ 9 files changed, 128 insertions(+), 2 deletions(-)
+ create mode 100644 WAITFREE
+ create mode 120000 include/wf-userland.h
+ create mode 120000 sql/wf-userland.c
+ create mode 160000 wf-userland
+
+diff --git a/.gitmodules b/.gitmodules
+index eeee4802b2b..befe6c9238d 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -14,3 +14,6 @@
+ [submodule "storage/maria/libmarias3"]
+ 	path = storage/maria/libmarias3
+ 	url = https://github.com/mariadb-corporation/libmarias3.git
++[submodule "wf-userland"]
++	path = wf-userland
++	url = git@ess-git.inf.uos.de:research/code-patching/wf-userland.git
+diff --git a/WAITFREE b/WAITFREE
+new file mode 100644
+index 00000000000..a5da591c4f6
+--- /dev/null
++++ b/WAITFREE
+@@ -0,0 +1,61 @@
++Basis: MariaDB 10.5 auf Debian 11 (testing / Bullseye)
++
++$ sudo apt install sysbench
++$ git clone --recursive git@ess-git.inf.uos.de:research/code-patching/mariadb.git
++$ cd mariadb
++
++Config anlegen:
++
++$ cat <<EOF > ~/.my.cnf
++[client]
++password=irrelevant
++port=3306
++socket=/tmp/mysql.sock
++
++[mysqld]
++datadir=/tmp/mariadb-waitfree-10.5
++language=$PWD/sql/share/english
++#gdb
++
++[mariadb]
++# Fuer Threadpool statt One Thread per Connection:
++#thread_handling=pool-of-threads
++EOF
++
++Standardsetup:
++
++$ unset CC
++$ BUILD/compile-pentium64
++
++Alternativ für ein Debugbuild (ist beim Patchen gut eine Größenordnung langsamer):
++
++$ BUILD/compile-pentium64-debug
++
++Arbeitsverzeichnis einrichten, in diesem Fall /tmp/mariadb-waitfree:
++
++$ scripts/mysql_install_db --srcdir=$PWD --datadir=/tmp/mariadb-waitfree-10.5
++
++MariaDB (ggf. nach Änderungen) ausführen:
++
++$ make && (cd sql ; ./mysqld ; cd ..)
++
++Einmalig eine Testdatenbank für sysbench anlegen:
++
++$ cd client; ./mysql
++> create database sbtest;
++
++Patchen ohne Last:
++
++$ repeat 10; do pkill -USR1 mysqld; sleep 1; done
++
++Patchen mit Last:
++
++$ for action in prepare run cleanup; do sysbench --db-driver=mysql --mysql-socket=/tmp/mysql.sock --mysql-user=$LOGNAME --threads=32 --time=30 --table-size=1000 oltp_insert $action; done & ( sleep 10; repeat 10; do pkill -USR1 mysqld ; sleep 1; done )
++
++MariaDB regulär beenden: SIGINT (Ctrl+C) im Debugbuild, SIGQUIT (Ctrl+\) sonst, oder
++
++$ PKILL -TERM mysqld
++
++Bei Deadlock im Patchcode:
++
++$ pkill -KILL mysqld
+diff --git a/include/wf-userland.h b/include/wf-userland.h
+new file mode 120000
+index 00000000000..c5cff2e9056
+--- /dev/null
++++ b/include/wf-userland.h
+@@ -0,0 +1 @@
++../wf-userland/wf-userland.h
+\ No newline at end of file
+diff --git a/sql/CMakeLists.txt b/sql/CMakeLists.txt
+index 83a1ea0abe7..b40c0b83044 100644
+--- a/sql/CMakeLists.txt
++++ b/sql/CMakeLists.txt
+@@ -154,6 +154,9 @@ SET (SQL_SOURCE
+                ${CMAKE_CURRENT_BINARY_DIR}/lex_token.h
+                ${GEN_SOURCES}
+                ${MYSYS_LIBWRAP_SOURCE}
++
++               # Wait-Free Code-Patching userland
++               wf-userland.c
+ )
+   
+ IF ((CMAKE_SYSTEM_NAME MATCHES "Linux" OR
+diff --git a/sql/mysqld.cc b/sql/mysqld.cc
+index b3fb330f13c..cb5ec9d1820 100644
+--- a/sql/mysqld.cc
++++ b/sql/mysqld.cc
+@@ -264,6 +264,8 @@ inline void setup_fpu()
+ #endif
+ }
+ 
++#include "wf-userland.h"
++
+ } /* cplusplus */
+ 
+ #define MYSQL_KILL_SIGNAL SIGTERM
+@@ -5308,6 +5310,21 @@ static void test_lc_time_sz()
+ }
+ #endif//DBUG_OFF
+ 
++static int my_wf_thread_count(bool global)
++{
++    return uint32_t(thread_count);
++}
++
++static void my_wf_trigger_global_quiescence()
++{
++  /*
++    When the main thread is woken up by SIGPATCH, the wf sigpatch handler may not yet have
++    signaled the demand for global quiescence -- so the main thread goes straight back to
++    a blocking select. Send a (unused) SIGUSR1 to trigger a select() abort with EINTR,
++    which in turn causes the main thread to check for wf global quiescence demand again.
++  */
++  pthread_kill(select_thread, SIGUSR1);
++}
+ 
+ #ifdef __WIN__
+ int win_main(int argc, char **argv)
+@@ -5701,6 +5718,16 @@ int mysqld_main(int argc, char **argv)
+   }
+ #endif
+ 
++  struct wf_configuration config = {
++    .thread_count              = my_wf_thread_count,
++    .trigger_global_quiescence = my_wf_trigger_global_quiescence,
++    .trigger_local_quiescence  = NULL,
++    .patch_applied = NULL,
++    .patch_done    = NULL,
++  };
++
++  wf_init(config);
++
+ #if defined(_WIN32) && !defined(EMBEDDED_LIBRARY)
+   Service.SetRunning();
+ #endif
+@@ -6270,6 +6297,9 @@ void handle_connections_sockets()
+ 	if (!select_errors++ && !abort_loop)	/* purecov: inspected */
+ 	  sql_print_error("mysqld: Got error %d from select",socket_errno); /* purecov: inspected */
+       }
++      else if (!abort_loop) {
++        wf_global_quiescence("main", 1);
++      }
+       continue;
+     }
+ 
+diff --git a/sql/sql_connect.cc b/sql/sql_connect.cc
+index 0add71b7b11..7bad3696823 100644
+--- a/sql/sql_connect.cc
++++ b/sql/sql_connect.cc
+@@ -45,6 +45,10 @@
+ #include "proxy_protocol.h"
+ #include <ssl_compat.h>
+ 
++extern "C" {
++#include "wf-userland.h"
++}
++
+ HASH global_user_stats, global_client_stats, global_table_stats;
+ HASH global_index_stats;
+ /* Protects the above global stats */
+@@ -1313,10 +1317,26 @@ pthread_handler_t handle_one_connection(void *arg)
+ 
+   mysql_thread_set_psi_id(connect->thread_id);
+ 
+-  if (init_new_connection_handler_thread())
++  if (init_new_connection_handler_thread()) {
+     connect->close_with_error(0, 0, ER_OUT_OF_RESOURCES);
+-  else
++  } else {
++    /*
++     * MariaDB upstream uses do_handle_one_connection(connect, put_in_cache=true);
++     * ( -> threads remain active and are cached after disconnect). Due to
++     * synchronization issues, code patching at the globel quiescence point
++     * for thread_handling=one-thread-per-connection only works when
++     * setting put_in_cache=false -- with true, some threads are part of
++     * the barrier condition even though they will never reach it.
++     *
++     * Workarounds:
++     *
++     * * only perform code-patching when all threads are active, e.g.
++     *   during sysbench's "run" phase
++     * * set put_in_cache=false (there's still a race condition, but it's
++     *   sufficiently improbable for now)
++     */
+     do_handle_one_connection(connect, true);
++  }
+ 
+   DBUG_PRINT("info", ("killing thread"));
+ #if defined(HAVE_OPENSSL) && !defined(EMBEDDED_LIBRARY)
+@@ -1417,6 +1437,7 @@ void do_handle_one_connection(CONNECT *connect, bool put_in_cache)
+ 
+     while (thd_is_connection_alive(thd))
+     {
++      wf_global_quiescence("connection_handler", 1);
+       if (mysql_audit_release_required(thd))
+         mysql_audit_release(thd);
+       if (do_command(thd))
+diff --git a/sql/threadpool_generic.cc b/sql/threadpool_generic.cc
+index 768dbab4e6b..7629b583863 100644
+--- a/sql/threadpool_generic.cc
++++ b/sql/threadpool_generic.cc
+@@ -30,6 +30,10 @@
+ #include <threadpool.h>
+ #include <algorithm>
+ 
++extern "C" {
++  #include "wf-userland.h"
++}
++
+ #ifdef HAVE_IOCP
+ #define OPTIONAL_IO_POLL_READ_PARAM this
+ #else 
+@@ -1503,6 +1507,7 @@ static void *worker_main(void *param)
+     if (!connection)
+       break;
+     this_thread.event_count++;
++    wf_global_quiescence("worker", 1);
+     tp_callback(connection);
+   }
+ 
+diff --git a/sql/wf-userland.c b/sql/wf-userland.c
+new file mode 120000
+index 00000000000..979befcb009
+--- /dev/null
++++ b/sql/wf-userland.c
+@@ -0,0 +1 @@
++../wf-userland/wf-userland.c
+\ No newline at end of file
+diff --git a/wf-userland b/wf-userland
+new file mode 160000
+index 00000000000..0b8d12b6d1e
+--- /dev/null
++++ b/wf-userland
+@@ -0,0 +1 @@
++Subproject commit 0b8d12b6d1e9803f2950c801715bd09442788303
+-- 
+2.45.1
+
