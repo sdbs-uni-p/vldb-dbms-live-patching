@@ -80,6 +80,12 @@ The raw data from most experiments is transformed into a DuckDB database, which 
 
  The "raw" data includes the original data from which the DuckDB databases were created and is provided for reference.
 
+## WfPatch Extension
+
+Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detailed overview of our extensions to the WfPatch user space library, as well as the original work by Rommel et al. [2]. To ensure clarity regarding the distinctions between the original work and our contributions, we have created this section. Here, we explicitly outline the nature and extent of our modifications, as it is not always feasible to differentiate these changes directly within the reproduction package.
+
+[2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
+
 ## Directory Overview
 
 - `supplementary-material/`
@@ -100,3 +106,5 @@ The raw data from most experiments is transformed into a DuckDB database, which 
   - Contains all scripts to analyze the (transformed) benchmark data and to create plots.
 - `plots/`
   - Contains a directory in which all plots will be stored.
+- `wfpatch-extension`/
+  - Highlights our extensions to the WfPatch user space library and other scripts.
