@@ -25,12 +25,12 @@ We provide our results, so step 1 or steps 2 and 3 can be skipped. This means ex
 
 ## Hardware
 
-We conducted our experiments using the following hardware:
+We conducted our experiments on a Dell PowerEdge R640 server equipped with:
 
 - CPU: 2x Intel Xeon Gold 6248R
   - 24 cores/48 threads per CPU
   - 3.0 GHz
-- Main Memory: 384 GB
+- Main Memory: 384 GB (12x 32 GB)
 - Disk: 3.0 TB SSD
 
 > **_NOTE:_** Our experiments use CPU pinning tailored to the specific number of CPU cores in our hardware. You may need to adjust some values to match your hardware configuration. Detailed instructions for these adjustments are provided in the steps as needed.
@@ -57,8 +57,6 @@ Once all experiments were performed, the CPU can be reset:
 ```
 sudo cpupower frequency-set -g schedutil
 ```
-
-## 
 
 ## Original Data
 
