@@ -151,4 +151,22 @@ cd ~/dbms-live-patching/plotting/comparison
 ./evaluate-comparison
 ```
 
+The version `wfpatch.patch-18502f99eb24f37d11e2431a89fd041cbdaea621` is our implementation, while `mariadb-wf-10.3.15` is the version of Rommel et al. [2]. 
+
+Example output:
+
+```
+/home/repro/dbms-live-patching/plotting/comparison/../../data/threadpool-comparison/result-ycsb/wfpatch.patch-18502f99eb24f37d11e2431a89fd041cbdaea621-ycsb
+Total Experiments: 100
+Total 'Deadlocks': 0
+Total #Recorded Latencies: 164335571
+Maximum #Recorded Latencies: 1685122
+Total Patchings during all Experiments: 2900
+```
+
+- The path contains the respective version.
+- Lines `Total #Recorded Latencies` and `Maximum #Recorded Latencies` can be ignored.
+- `Total 'Deadlocks':` should be `0` and `Total Patchings during all Experiments:` should be `2900`. Therefore, no deadlock occurred, and all patches were successfully applied.
+
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
+
