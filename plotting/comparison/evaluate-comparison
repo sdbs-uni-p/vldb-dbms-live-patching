@@ -1,0 +1,50 @@
+#!/usr/bin/env zsh
+
+set -eu
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+source ./INPUT_BASE_DIRECTORY
+
+input_dir=${INPUT_BASE_DIRECTORY}/threadpool-comparison
+
+for benchmark in $input_dir/*; do
+    if [ ! -d $benchmark ]; then
+        continue
+    fi
+    for experiment in $benchmark/*; do
+        counter=0
+        total_patchings=0
+        deadlocks=0
+        total_recorded_latencies=0
+        max_recorded_latencies=0
+        for run in $experiment/*; do
+            if [ ! -d $run ]; then
+                continue
+            fi
+            patchings=`cat $run/wfpatch_log | grep -F -- '- [finished,' | wc -l`
+            total_patchings=$((total_patchings+patchings))
+    
+            if [ $patchings -le 1 ]; then
+                deadlocks=$((deadlocks+1))
+            fi
+    
+            latencies=`cat $run/*.raw.csv | wc -l`
+            total_recorded_latencies=$((total_recorded_latencies+latencies))
+    
+            if [ $latencies -gt $max_recorded_latencies ]; then
+                max_recorded_latencies=$latencies
+            fi
+    
+            counter=$((counter+1))
+        done
+        echo "---------------------"
+        echo $experiment
+        echo "Total Experiments: $counter"
+        echo "Total 'Deadlocks': $deadlocks"
+        echo "Total #Recorded Latencies: $total_recorded_latencies"
+        echo "Maximum #Recorded Latencies: $max_recorded_latencies"
+        echo "Total Patchings during all Experiments: $total_patchings"
+        echo "---------------------"
+    done
+done
