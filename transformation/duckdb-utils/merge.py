@@ -32,6 +32,7 @@ def merge(
         # use the first (biggest) source file as a basis.
         print(f"Using {source_files[0]} as a basis for the output.")
         shutil.copyfile(source_files[0], destination_file)
+        os.remove(source_files[0])
         source_files = source_files[1:]
 
     def merge_src_into_dst(source_file: str):
@@ -94,6 +95,7 @@ def merge(
 
     for src_file in source_files:
         merge_src_into_dst(src_file)
+        os.remove(src_file)
 
 
 def parse_args(input_args: List[str]) -> Namespace:
