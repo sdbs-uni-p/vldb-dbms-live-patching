@@ -54,6 +54,13 @@ Multiple threads are used for the transformation process as multiple runs can be
 ```
 pool = FutureCollector(ProcessPoolExecutor(max_workers=15))
 ```
+## Database Schema
+
+The schema of the database files can be found here:
+
+- All experiments transformed with `transform-experiment`: `beder/queries/create.sql`
+- Experiment transformed with `transform-redis-all-patches`: `beder-patch/queries/create.sql`
+
 ## Description
 
 Most experiment directories are structured as follows:
