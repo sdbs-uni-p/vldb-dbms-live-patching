@@ -13,12 +13,14 @@ def extract_data(run: str):
         with open(file) as f:
             lines = [line for line in f.readlines() if line.startswith("- [patched")]
             if len(lines) != 1:
-                print(f"Multiple patched lines in {file}")
-                exit(1)
+                print(f"No or multiple patched lines in {file}. Skipping result.")
+                return None
             return float(lines[0].split(",")[1].strip())
 
     wf_global_patch = get_patched_time(os.path.join(run, "wf_log_1"))
     wf_local_patch = get_patched_time(os.path.join(run, "wf_log_0"))
+    if wf_global_patch is None or wf_local_patch is None:
+        return None, None
 
     patches = [os.path.join(run, file) for file in os.listdir(run) if file.startswith("patch--")]
     df_patch_info = patch_data.read_patch_elf(patches)
@@ -48,6 +50,8 @@ def main():
         conn.create_tables()
         for run in runs:
             df_patch_time, df_patch_info = extract_data(run)
+            if df_patch_time is None or df_patch_info is None:
+                continue
             storage.insert("run", df_patch_time)
             storage.insert("patch_elf", df_patch_info)
 
