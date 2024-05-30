@@ -3,7 +3,7 @@
 set -eu
 
 SCRIPT_DIR=${0:a:h}
-input_dir=$1
+input_dir=${SCRIPT_DIR}/../data/threadpool-comparison
 
 for experiment in $input_dir/*; do
     counter=0
