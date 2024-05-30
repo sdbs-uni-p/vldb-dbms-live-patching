@@ -1,20 +1,24 @@
 # Extensions to the Artifacts of Rommel et al. [2]
 
-The artifacts of the research of Rommel et al. [2] are available here:
+The artifacts from the research by Rommel et al. [2] are available here:
 - Website: https://www.sra.uni-hannover.de/Publications/2020/WfPatch/index.html
 - Direct link to the artifacts (a QEMU VM): https://www.sra.uni-hannover.de/Publications/2020/WfPatch/artifact-vm.tar.xz
 
 ## User Space Library
-`wf-userland.c` and `wf-userland.h` define the user space library of the live patching utility of Rommel et al. [2]. Both files in this directory define *our* used user space library as we made several extensions to it (e.g. added support of priorities, adapted the system calls to the new MMView Linux kernel etc.). The *original* user space library of Rommel et al. [2] is contained in the `rommel/` directory. To better visualize our modifications, we also provide a git patch about the difference of our and the original user space library in `diff/0001-wf-userland.patch`.
+
+The files `wf-userland.c` and `wf-userland.h` define the user space library of the live patching framework by Rommel et al. [2]. The files in this directory represent ***our*** modified version of the user space library, which includes several extensions (e.g., added support for priorities, adapted system calls for the new MMView Linux kernel, etc.). The ***original*** user space library by Rommel et al. [2] is located in the `rommel/` directory. To clearly illustrate our modifications, we provide a git patch detailing the differences between our version and the original library in `diff/0001-wf-userland.patch`.
 
 ## Create Patch
-The `create-patch` script is a small script to easily generate a patch. We slightly modified the script and enhanced it with more information. The script in this directory defines *our* version, and the original of Rommel et al. [2] can be found in the `rommel/` directory. To better visualize our modifications, we also provide a git patch about the difference of our and the original script in `diff/0001-create-patch.patch`.
 
+The `create-patch` script is a utility for generating patches. We have slightly modified and enhanced this script to include more information. The version in this directory represents ***our*** modified script, while the ***original*** version by Rommel et al. [2] is available in the `rommel/` directory. To clearly illustrate our modifications, we provide a git patch detailing the differences between our version and the original script in `diff/0001-create-patch.patch`.
 
 ## MariaDB
-To easly visualize our extension to the MariaDB source code (for git tag `mariadb-10.5.0`), we added a git patch showing the modifications (`mariadb-10.5.0.patch`). We excluded the user space library in this patch for better inspection.
 
-The artifacts of Rommel et al. [2] contained two different source code modifications to MariaDB. We added both versions as git patch to the `rommel/` directory (`mariadb-wf-10.3.15.patch` and `mariadb-wf-10.5.patch`). However, we cannot provide a git patch here as we have implemented our source code extension from scratch as explained in our paper.
+To easily visualize our extensions to the MariaDB source code (for git tag `mariadb-10.5.0`), we have provided a git patch showing our modifications (`mariadb-10.5.0.patch`). We excluded the user space library in this patch for better inspection.
+
+The artifacts by Rommel et al. [2] contain two different source code modifications to MariaDB. Both versions are included as git patches in the `rommel/` directory (`mariadb-wf-10.3.15.patch` and `mariadb-wf-10.5.patch`). However, we cannot provide a git patch highlighting the differences between our implementation and theirs, as we implemented our source code extension from scratch. As explained in our paper, we adapted the quiescence points for the one-thread-per-connection policy from Rommel et al. [2], while we developed a novel priority-based quiescence approach for the thread pool policy.
+
+---
 
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
