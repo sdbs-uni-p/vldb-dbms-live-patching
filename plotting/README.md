@@ -148,7 +148,7 @@ The results will be shown in the terminal.
 
 ```
 cd ~/dbms-live-patching/plotting
-./evalute-comparison-script ../data/threadpool-comparison
+./evalute-comparison-script
 ```
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
