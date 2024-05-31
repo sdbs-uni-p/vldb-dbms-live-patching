@@ -10,10 +10,10 @@ We crawl the git history of MariaDB and Redis to identify source code changes (c
 
 To safe disk space, we do not save any intermediate data. Otherwise several TB of free disk space would be required.
 
-Approximate time until all patches are crawled:
+Approximate time until all patches are crawled (host system/VM):
 
 - MariaDB: 4 days.
-- Redis: 2 hours
+- Redis: 2.5 hours
 
 ## Linux Kernel
 
