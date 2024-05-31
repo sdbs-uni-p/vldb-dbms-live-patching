@@ -7,3 +7,7 @@ General notes:
 - `renv` is used to manage the environment
 - The file `INPUT_BASE_DIRECTORY` specifies the directory in which all experiment result directories are stored.
 - The file `OUTPUT_DIRECTORY` specifies the directory in which the resulting plots should be stored.
+
+## Arxiv
+All scripts with an `arxiv-` prefix are plotting scripts for the arxiv version of the paper.
+

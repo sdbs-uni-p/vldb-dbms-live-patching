@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+source INPUT_BASE_DIRECTORY
+source OUTPUT_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/one-thread-per-connection-ch/one-thread-per-connection-ch.duckdb --output $OUTPUT_DIRECTORY --plot arxiv-plot-OTPC-ch-time.R 
+
