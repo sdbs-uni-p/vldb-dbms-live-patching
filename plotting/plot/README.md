@@ -8,6 +8,6 @@ General notes:
 - The file `INPUT_BASE_DIRECTORY` specifies the directory in which all experiment result directories are stored.
 - The file `OUTPUT_DIRECTORY` specifies the directory in which the resulting plots should be stored.
 
-## Arxiv
-All scripts with an `arxiv-` prefix are plotting scripts for the arxiv version of the paper.
+## arXiv 
+Scripts prefixed with `arxiv-` are dedicated to generating plots for the arXiv version of the paper. These plots are larger and display all patch IDs for enhanced readability.
 
