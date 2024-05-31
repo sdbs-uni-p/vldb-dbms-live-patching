@@ -6,6 +6,8 @@ You can reproduce our results either by using our pre-defined [QEMU VM](#qemu-vm
 
 ## QEMU VM
 
+You need to install QEMU and KVM (for best performance) on your system.
+
 The following commands get you started using the VM:
 
 ```

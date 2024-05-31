@@ -170,3 +170,20 @@ Total Patchings during all Experiments: 2900
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
 
+## Original Data
+
+To analyze the original data (plot charts, etc.), you can perform the following steps:
+
+```
+cd ~/dbms-live-patching
+# Download data
+./download-transformed-data
+
+# Change base directory storing all data:
+vim plotting/plot/INPUT_BASE_DIRECTORY
+
+# Change directory to transformed-data directory:
+#export INPUT_BASE_DIRECTORY=${SCRIPT_DIR}/../../data
+export INPUT_BASE_DIRECTORY=${SCRIPT_DIR}/../../transformed-data
+```
+
