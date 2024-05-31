@@ -172,7 +172,7 @@ Total Patchings during all Experiments: 2900
 
 ## Original Data
 
-To analyze the original data (plot charts, etc.), you can perform the following steps:
+To analyze our benchmark data (plot charts, etc.), you can perform the following steps:
 
 ```
 cd ~/dbms-live-patching
