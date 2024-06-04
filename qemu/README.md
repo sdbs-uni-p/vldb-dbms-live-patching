@@ -81,7 +81,7 @@ sudo reboot
 
 In case you want to prepare a new system for the execution of all scripts, i.e. reproducing the results, please see the notes below on how to compile the MMView Linux kernel and what software is required. It is required to use ***Debian 11 (bullseye)*** as distribution (each distribution ships a different version of `gcc` and patch generation is sensitive to the `gcc` version used).
 
-We also provide a `Dockerfile` for each reproduction step (except the experiments). However, we have validated the correct functionality of our reproduction pipeline using a prepared server and the VM, but not with the `Dockerfiles`.
+We also provide a `Dockerfile` for each reproduction step (excluding the experiments). While we have validated the correct functionality of our reproduction pipeline using a prepared server and the VM, we have not tested the entire pipeline with the `Dockerfiles` (except for the patch crawling step, where using the Docker container is recommended).
 
 ### VM Preparation Notes
 
