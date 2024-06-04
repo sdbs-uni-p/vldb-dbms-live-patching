@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-set -euv
+set -euvx
 
 SCRIPT_DIR=${0:a:h}
 cd ${SCRIPT_DIR}
@@ -34,10 +34,15 @@ for action_after_sleep in `seq 1 200`; do
         taskset -c 1-47:2 ./redis-benchmark --csv -t set -n $queries -r 1000000000 -d 409600 -c 10 --threads 10 -s /tmp/redis.sock 2> ${RESULT_DIR}/latencies.csv &
         benchmark_pid=$!
         
-       sleep $action_after_sleep
-       echo ${method} > /tmp/trigger-redis
+        sleep $action_after_sleep
+        echo ${method} > /tmp/trigger-redis
         
-        tail --pid=$benchmark_pid -f /dev/null
+        # Wait for benchmark process to finish.. 
+        #tail --pid=$benchmark_pid -f /dev/null
+        while s=`ps -p $benchmark_pid -o s=` && [[ "$s" && "$s" != 'Z' ]]; do
+            sleep 1
+        done
+
         sleep 1
         
         # Write result

@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+
+set -uv
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+for script in `ls | grep arxiv-do-`; do
+    if [[ $script == `basename $0` ]]; then
+        continue
+    fi
+    echo "############################"
+    >&2 echo "Starting $script"
+    echo $script
+    time ./$script
+    if [ $? -eq 0 ]; then
+        >&2 echo "$script SUCCESS"
+    else
+        >&2 echo "$script FAILURE"
+    fi
+
+done
+echo "DONE! :-)"

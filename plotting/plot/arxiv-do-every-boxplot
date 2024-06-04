@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+source INPUT_BASE_DIRECTORY
+source OUTPUT_DIRECTORY
+./exec-file-py --input-data $INPUT_BASE_DIRECTORY/threadpool-every-0.1/threadpool-every-0.1.duckdb  $INPUT_BASE_DIRECTORY/one-thread-per-connection-every-0.1/one-thread-per-connection-every-0.1.duckdb --output $OUTPUT_DIRECTORY --plot arxiv-plot-every-boxplot.R
+
