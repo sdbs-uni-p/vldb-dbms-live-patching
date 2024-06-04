@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+set -euv
+
+SCRIPT_DIR=${0:a:h}
+cd ${SCRIPT_DIR}
+
+./setup
+cd ${SCRIPT_DIR}/redis/src
+
+sudo cpupower frequency-set -g performance
+sudo sh -c "sync && echo 3 > /proc/sys/vm/drop_caches"
+
+queries=50000
+taskset -c 1-47:2 ./redis-server --save "" --appendonly no --unixsocket /tmp/redis.sock &
+server_pid=$!
+        
+sleep 2
+taskset -c 1-47:2 ./redis-benchmark --csv -t set -n $queries -r 1000000000 -d 409600 -c 10 --threads 10 -s /tmp/redis.sock 2> /dev/null &
+benchmark_pid=$!
+        
+tail --pid=$benchmark_pid -f /dev/null
+sudo cpupower frequency-set -g schedutil
+
