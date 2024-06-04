@@ -15,6 +15,20 @@ Approximate time until all patches are crawled (host system/VM):
 - MariaDB: 4 days.
 - Redis: 2.5 hours
 
+## Reproduction Results
+
+### [RECOMMENDED] Docker Container in the VM
+
+This setup yielded the expected results. See the [Docker Container](#docker-container) section for instructions.
+
+### Prepared Host System
+
+We noticed one deviating commit when we reproduced our results in a prepared host system.
+
+### VM
+
+We noticed a crash of the VM when analyzing the commits for MariaDB during the phase of using perf to trace the function calls (step 3). We could not find the cause of this crash (no error message, sufficient disk space, free main memory, etc.), but restarting the script from the point where it failed resolved the issue, and the script ran successfully.
+
 ## Linux Kernel
 
 Patch crawling should be done using the ***unmodified*** Linux kernel.
@@ -275,7 +289,7 @@ Crawling the Redis Commit History for patchable commits is used similar to Maria
 
 ## Docker Container
 
-We cannot guarantee the correct functionality of the Docker container; however, it is designed to crawl patches without requiring the VM. For more information, please refer to the [container](container) directory.
+The Docker container is designed to crawl patches independently of the VM. However, it is recommended to use the container within the VM, as the environment is fully prepared (otherwise, tracing function calls using `perf` may require some adjustments if you're using a different host system than Debian 11). For detailed information and steps on using the container, please refer to the [container](container) directory.
 
 ---
 
