@@ -144,6 +144,11 @@ echo -1 > /proc/sys/kernel/perf_event_paranoid
 # Increase watchdog timeout
 echo 60 > /proc/sys/kernel/watchdog_thresh
 
+# Map /tmp to tmpfs
+sudo vim /etc/fstab
+# Add line:
+tmpfs   /tmp    tmpfs   size=100%,mode=1777,nosuid,nodev   0   0
+
 # Create script "cpupower" in "/bin" as this command cannot be used inside the VM. The experimet scripts use this command heavly and should not fail because it is missing.
 cd /bin
 touch cpupower

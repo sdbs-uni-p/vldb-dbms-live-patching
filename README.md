@@ -108,3 +108,7 @@ Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detai
   - Contains a directory in which all plots will be stored.
 - `wfpatch-extension`/
   - Highlights our extensions to the WfPatch user space library and other scripts.
+
+## TODOs:
+- VM: Map /tmp to /tmpfs
+- VM: Fix ccache config (size vs maxsize)
