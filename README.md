@@ -110,6 +110,7 @@ Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detai
   - Highlights our extensions to the WfPatch user space library and other scripts.
 
 ## TODOs:
+- VM: Install Docker
 - VM: Map /tmp to /tmpfs
 - VM: Fix ccache config (size vs maxsize)
 - Upload pre-built Docker image for patch crawling
