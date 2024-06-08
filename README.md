@@ -112,3 +112,4 @@ Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detai
 ## TODOs:
 - VM: Map /tmp to /tmpfs
 - VM: Fix ccache config (size vs maxsize)
+- Upload pre-built Docker image for patch crawling
