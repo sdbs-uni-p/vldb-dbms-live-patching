@@ -12,7 +12,7 @@ To safe disk space, we do not save any intermediate data. Otherwise several TB o
 
 Approximate time until all patches are crawled (host system/VM):
 
-- MariaDB: 4 days.
+- MariaDB: 55 hours.
 - Redis: 2.5 hours
 
 ## Reproduction Results
