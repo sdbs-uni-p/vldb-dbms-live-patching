@@ -2,6 +2,7 @@ import streamlit as st
 from typing import List
 import os
 import base64
+import operator
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -28,10 +29,17 @@ def display_pdf(file):
 if len(common_plots) == 0:
     st.write("No plots to compare.")
 else:
+    st.write("Plots available in paper but not in reproduction:")
+    st.write(set(paper_plots) - set(repro_plots))
+    st.write("---")
+    st.write("Plots available in repro but not in paper:")
+    st.write(set(repro_plots) - set(paper_plots))
+    st.write("---")
+
     left, right = st.columns([1, 1])
     left.write("# Paper plots")
     right.write("# Reproduction plots")
-    for f in common_plots:
+    for f in sorted(common_plots):
         st.write(f)
         left, right = st.columns([1, 1])
         with left:
