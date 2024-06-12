@@ -2,7 +2,7 @@
 
 This directory wraps all experiments performed. Per default, our live patchable commit lists are used (see `~/dbms-live-patching/commits`).
 
-Approximate time until all experiments are performed: 36 hours (Redis + One-by-One).
+Approximate time until all experiments are performed: 100 hours.
 
 ## Linux Kernel
 
