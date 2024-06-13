@@ -2,5 +2,5 @@
 
 source INPUT_BASE_DIRECTORY
 source OUTPUT_DIRECTORY
-./exec-file-py --input $INPUT_BASE_DIRECTORY/patch-one-by-one --output $OUTPUT_DIRECTORY --plot plot-one-by-one.R
+./exec-file-py --input $INPUT_BASE_DIRECTORY/patch-one-by-one/data --output $OUTPUT_DIRECTORY --plot plot-one-by-one.R
 
