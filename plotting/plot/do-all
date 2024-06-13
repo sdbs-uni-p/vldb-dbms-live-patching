@@ -9,6 +9,10 @@ for script in `ls | grep do-`; do
     if [[ $script == `basename $0` ]]; then
         continue
     fi
+    if [[ $script == "arxiv-do-all" ]]; then
+        continue
+    fi
+
     echo "############################"
     >&2 echo "Starting $script"
     echo $script
