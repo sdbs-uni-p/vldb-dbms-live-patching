@@ -19,5 +19,5 @@ echo "MariaDB threadpool"
 ./duckdb-utils/duckdb-0.9.2 -readonly $INPUT_BASE_DIRECTORY/threadpool/threadpool.duckdb -s "`cat ${SCRIPT_DIR}/new-as.sql`"
 
 echo "Redis"
-ls $INPUT_BASE_DIRECTORY/redis-1-200_400kB/data | grep result-5 | xargs -I '{}' sh -c 'cat $INPUT_BASE_DIRECTORY/redis-1-200_400kB/data/{}/wfpatch_log.csv  | sed -n 2p | cut -d "," -f1' | sort -n | sed -n '1p;$p'
+ls $INPUT_BASE_DIRECTORY/redis-1-200_400kB | grep result-5 | xargs -I '{}' sh -c 'cat $INPUT_BASE_DIRECTORY/redis-1-200_400kB/{}/wfpatch_log.csv  | sed -n 2p | cut -d "," -f1' | sort -n | sed -n '1p;$p'
 
