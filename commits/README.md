@@ -1,6 +1,5 @@
-Contains lists of live patchable commits of MariaDB and Redis.
+# Commit Lists
 
-Using the `./diff` script, you can compare the commit lists of your reproduction pipeline (`reproduction/` directory) with the commits crawled by us (`paper/` directory). 
+This directory contains lists of commits for MariaDB and Redis, gathered using the `patch-crawler` tool. The `paper/` directory holds the commit lists we crawled as references, while the `reproduction/` directory is intended for storing commit lists generated during the execution of `patch-crawler`. The commit list files in this directory are symbolic links to those in the `paper/` directory and will be used for conducting the experiments.
 
-The commit list files in this directory are symbolic links to the files in the `paper/` directory.
-
+You can use the `./diff` script to compare the commit lists in the `reproduction/` directory with those in the `paper/` directory. Ideally, there should be no discrepancies. However, MariaDB's commit lists can vary slightly due to the use of `ccache` (which speeds up compilation) and `perf`, resulting in non-deterministic outcomes. This may lead to minor differences. In our tests of the reproduction pipeline, we only found differences in a few commits. Nevertheless, since we manually selected the five commits primarily used for the experiments, these discrepancies do not pose a limitation.
