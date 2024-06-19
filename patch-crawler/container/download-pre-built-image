@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+set -eu
+
+docker image import https://zenodo.org/records/12166690/files/docker-image-patch-crawler.tar.xz
+docker tag d1a5d958027d patch-crawler:latest
+
