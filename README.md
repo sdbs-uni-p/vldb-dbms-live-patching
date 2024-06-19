@@ -120,3 +120,12 @@ Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detai
   - Highlights our extensions to the WfPatch user space library and other scripts.
 - `utils/`
   - Utility scripts used in different steps of the reproduction pipeline.
+
+## Zenodo Change History
+### v1 -> v2
+- Added pre-built Docker image for crawling patches.
+- Updated QEMU VM:
+    - Fixed ccache config.
+    - Installed Docker.
+    - Added tmpfs mapping for `/tmp`
+
