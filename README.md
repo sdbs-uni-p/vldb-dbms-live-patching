@@ -1,6 +1,6 @@
 # Reproduction Package for the VLDB paper: ***The Case for DBMS Live Patching***
 
-[![DOI: 10.5281/zenodo.11370684](https://zenodo.org/badge/doi/10.5281/zenodo.11370684.svg)](https://doi.org/10.5281/zenodo.11370684)
+[![DOI: 10.5281/zenodo.11370683](https://zenodo.org/badge/doi/10.5281/zenodo.11370683.svg)](https://doi.org/10.5281/zenodo.11370683)
 
 This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results.
 
@@ -70,16 +70,13 @@ sudo cpupower frequency-set -g schedutil
 
 ## Original Data
 
-We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11370684). 
+We provide our results in Zenodo (https://doi.org/10.5281/zenodo.11370683). 
 
 - Raw experiment data: 
-  - https://zenodo.org/records/11370684/files/raw-data.tar.xz
   - `./download-raw-data`
 - Transformed experiment data:
-  - https://zenodo.org/records/11370684/files/transformed-data.tar.xz
   -  `./download-transformed-data`
 - Download MariaDB database directories:
-  - https://zenodo.org/records/11370684/files/data-output.tar.xz
   -  `./experiments/mariadb/download-mariadb-dataset`
 
 > **_NOTE:_** When using one of the `download-` scripts, the data is downloaded, extracted and the downloaded archive gets deleted.
@@ -120,10 +117,3 @@ Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detai
   - Highlights our extensions to the WfPatch user space library and other scripts.
 - `utils/`
   - Utility scripts used in different steps of the reproduction pipeline.
-
-
-## TODOs:
-- VM: Install Docker
-- VM: Map /tmp to /tmpfs
-- VM: Fix ccache config (size vs maxsize)
-- Upload pre-built Docker image for patch crawling
