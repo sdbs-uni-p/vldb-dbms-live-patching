@@ -1,6 +1,8 @@
 # QEMU Virtual Machine (VM)
 
-We provide a QEMU VM which is equipped (1) with the MMView Linux kernel and (2) all necessary software and libraries installed required for executing our scripts/tools. All steps of the reproduction package can be executed within the VM. But please keep in mind that we ran our experiments directly on a prepared system and that the overhang of the virtualization of the VM may result in slightly different measurements (since we paid close attention to latency-sensitive measurements).
+We provide a QEMU VM which is equipped (1) with the MMView Linux kernel and (2) all necessary software and libraries installed required for executing our scripts/tools. All steps of the reproduction package can be executed within the VM. 
+
+> **NOTE: Our experiments were conducted directly on a prepared server, avoiding the overhead of virtualization. When replicating the results in the VM, we observed a 25% performance degradation compared to the direct server execution. This degradation introduces significant system noise, obscuring some measured effects. Consequently, we recommend conducting the experiments directly on a prepared server for more accurate results. However, we provide the VM for a quick start and ease of reproducibility.**
 
 You can reproduce our results either by using our pre-defined [QEMU VM](#qemu-vm) or by preparing a [new server](#prepare-own-server) to execute experiments directly on it.
 
@@ -79,13 +81,11 @@ sudo reboot
 
 ## Prepare own Server
 
-In case you want to prepare a new system for the execution of all scripts, i.e. reproducing the results, please see the notes below on how to compile the MMView Linux kernel and what software is required. It is required to use ***Debian 11 (bullseye)*** as distribution (each distribution ships a different version of `gcc` and patch generation is sensitive to the `gcc` version used).
-
-We also provide a `Dockerfile` for each reproduction step (excluding the experiments). While we have validated the correct functionality of our reproduction pipeline using a prepared server and the VM, we have not tested the entire pipeline with the `Dockerfiles` (except for the patch crawling step, where using the Docker container is recommended).
+In case you want to prepare a new server for the execution of all scripts, i.e. reproducing the results, please see the notes below on how to compile the MMView Linux kernel and what software is required. It is required to use ***Debian 11 (bullseye)*** as distribution (each distribution ships a different version of `gcc` and patch generation is sensitive to the `gcc` version used).
 
 ### VM Preparation Notes
 
-The following is a brief summary about the steps performed to prepare the VM. These steps can be used as a basis for preparing a new system for our reproduction pipeline.
+The following is a brief summary about the steps performed to prepare the VM. These steps can be used as a basis for preparing a new server for our reproduction pipeline.
 
 ```
 # Install software

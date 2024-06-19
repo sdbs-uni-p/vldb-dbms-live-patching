@@ -7,6 +7,16 @@ This repository contains all scripts and additional material referenced in the p
 ## Supplementary Material
 The directory [supplementary-material](supplementary-material) contains the additional charts referenced in the paper.
 
+## Hardware Requirements
+
+To be able to execute this reproduction package, the following hardware is recommended:
+
+- At least 1 TB of free disk space
+- At least 384 GB of main memory
+- At least 30 CPU cores (40 cores or more are recommended)
+
+The entire reproduction pipeline takes about 160 hours.
+
 ## Reproduction Pipeline
 
 The following steps provide a high-level overview of how to reproduce this research. Please see the respective sub-directory for in-depth details about the commands to execute:
@@ -21,7 +31,7 @@ The following steps provide a high-level overview of how to reproduce this resea
 
 The experiments in step 2 must be performed on a system using the MMView Linux kernel (https://github.com/luhsra/linux-mmview; git hash `ecfcf9142ada6047b07643e9fa2afe439b69a5f0`). The MMView Linux kernel is an improved version of the original WfPatch Linux kernel (https://github.com/luhsra/linux-wfpatch). For our research, we used the newer MMView Linux kernel. Please note that the terms "MMView Linux kernel" and "WfPatch Linux kernel" can be used interchangeably.
 
-We provide our results, so step 1 or steps 2 and 3 can be skipped. This means experiments can be performed directly, or plots can be generated immediately (but you may have to move/rename some directories to match the expected names/locations).
+We provide the results from our experiments, so step 1 or steps 2 and 3 can be skipped. This means experiments can be performed directly, or plots can be generated immediately (but you may have to move/rename some directories to match the expected names/locations).
 
 ## Hardware
 
@@ -33,7 +43,7 @@ We conducted our experiments on a Dell PowerEdge R640 server equipped with:
 - Main Memory: 384 GB (12x 32 GB)
 - Disk: 3.0 TB SSD
 
-> **_NOTE:_** Our experiments use CPU pinning tailored to the specific number of CPU cores in our hardware. You may need to adjust some values to match your hardware configuration. Detailed instructions for these adjustments are provided in the steps as needed.
+> **_NOTE:_** Our experiments use CPU pinning tailored to the specific number of CPU cores in our hardware. You may need to adjust the pinning to match your hardware configuration. Detailed instructions for these adjustments are provided in the steps as needed.
 
 ## System Optimizations
 
@@ -41,7 +51,7 @@ To precisely measure (tail) latencies, we performed the following system optimiz
 
 - Disable Intel Hyper-Threading (in BIOS)
 - Operate all CPU cores at maximum frequency (see commands below)
-- The `/tmp` directory should be mapped to main memory
+- Map the `/tmp` directory to main memory
 
 ### CPU Core Frequency
 
@@ -82,7 +92,7 @@ The raw data from most experiments is transformed into a DuckDB database, which 
 
 ## WfPatch Extension
 
-Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detailed overview of our extensions to the WfPatch user space library, as well as the original work by Rommel et al. [2]. To ensure clarity regarding the distinctions between the original work and our contributions, we have created this section. Here, we explicitly outline the nature and extent of our modifications, as it is not always feasible to differentiate these changes directly within the reproduction package.
+Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detailed overview of our extensions to the WfPatch user space library, as well as the original work by Rommel et al. [2]. To ensure clarity regarding the distinctions between the original work and our contributions, we have created this directory. Here, we explicitly outline the nature and extent of our modifications, as it is not always feasible to differentiate these changes directly within the reproduction package.
 
 [2] Florian Rommel, Christian Dietrich, Daniel Friesel, Marcel Köppen, ChristophBorchert, Michael Müller, Olaf Spinczyk, and Daniel Lohmann. 2020. *From Global to Local Quiescence: Wait-Free Code Patching of Multi-Threaded Processes*. In Proc. OSDI. 651–666.
 
@@ -108,6 +118,9 @@ Please refer to the [wfpatch-extension](wfpatch-extension) directory for a detai
   - Contains a directory in which all plots will be stored.
 - `wfpatch-extension`/
   - Highlights our extensions to the WfPatch user space library and other scripts.
+- `utils/`
+  - Utility scripts used in different steps of the reproduction pipeline.
+
 
 ## TODOs:
 - VM: Install Docker
