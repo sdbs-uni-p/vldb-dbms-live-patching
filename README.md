@@ -1,6 +1,9 @@
 # Reproduction Package for the VLDB paper: ***The Case for DBMS Live Patching***
 
-[![DOI: 10.5281/zenodo.11370683](https://zenodo.org/badge/doi/10.5281/zenodo.11370683.svg)](https://doi.org/10.5281/zenodo.11370683)
+![VLDB Badge](https://img.shields.io/badge/VLDB-2024-blue.svg)
+[![DOI: 10.5281/zenodo.11370683](https://zenodo.org/badge/doi/10.5281/zenodo.11370683.svg)](https://doi.org/10.5281/zenodo.11370683) 
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
+
 
 This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results.
 
