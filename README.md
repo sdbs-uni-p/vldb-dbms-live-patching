@@ -5,7 +5,7 @@
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
 
-This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results.
+This repository contains all scripts and additional material referenced in the paper. It also contains instructions on how to reproduce the results. The original data, a VM prepared for reproducing our results, etc., can be found in [Zenodo](https://zenodo.org/records/12166690).
 
 ## Supplementary Material
 The directory [supplementary-material](supplementary-material) contains the additional charts referenced in the paper.
