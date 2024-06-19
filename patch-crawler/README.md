@@ -2,32 +2,34 @@
 
 We crawl the git history of MariaDB and Redis to identify source code changes (commits) that can be patched live. A detailed explanation of the steps executed is provided at the [end of this document](#description). While the process of identifying patches is fully automated, it employs a brute-force method to capture as many live-patchable commits as possible, without accounting for other critical factors such as semantic changes.
 
-> **_NOTE:_**: Patch generation is highly system specific. We have noticed slight differences when the following components are deviated from:
+> **_NOTE:_** Patch generation is highly system specific. We have noticed slight differences when the following components are deviated from:
 >
 > - OS: Debian Bullseye (11)
 > - GCC version: 10.2.
+>
+> **MariaDB's crawled live patches can vary slightly due to the use of `ccache` (which speeds up compilation) and `perf`, resulting in non-deterministic outcomes. This may lead to minor differences. In our tests of the reproduction pipeline, we only found differences in a few commits. Nevertheless, since we manually selected the five commits primarily used for the experiments, these discrepancies do not pose a limitation.**
 
 
 To safe disk space, we do not save any intermediate data. Otherwise several TB of free disk space would be required.
 
-Approximate time until all patches are crawled (host system/VM):
-
-- MariaDB: 55 hours.
-- Redis: 2.5 hours
+- Approximate **time** until all patches are crawled: **58 hours**
+  - MariaDB: 55 hours
+  - Redis: 2.5 hours
+- Approximate **disk space** used after running all experiments: **470 GB**
+  - MariaDB: 445 GB (75 GB patch crawling; 370 GB perf analysis)
+  - Redis:  25 GB
 
 ## Reproduction Results
 
-### [RECOMMENDED] Docker Container in the VM
-
-This setup yielded the expected results. See the [Docker Container](#docker-container) section for instructions.
-
-### Prepared Host System
-
-We noticed one deviating commit when we reproduced our results in a prepared host system.
+You can either crawl live patches using the VM, executing it on the prepared server directly, or using the prepared Docker container. 
 
 ### VM
 
-We noticed a crash of the VM when analyzing the commits for MariaDB during the phase of using perf to trace the function calls (step 3). We could not find the cause of this crash (no error message, sufficient disk space, free main memory, etc.), but restarting the script from the point where it failed resolved the issue, and the script ran successfully.
+We noticed a crash of the VM when analyzing the commits for MariaDB during the phase of using `perf` to trace the function calls (step 3). We could not find the cause of this crash (no error message, sufficient disk space, free main memory, etc.), but restarting the script from the point where it failed resolved the issue, and the script ran successfully.
+
+### Docker Container in the VM
+
+See the [Docker Container](#docker-container) section for instructions.
 
 ## Linux Kernel
 
@@ -42,7 +44,7 @@ sudo reboot
 
 ## Crawl MariaDB Commit History
 
-Crawling the MariaDB commit history and selecting suitable patches is a multi-step process. Each step creates a list of commits which are potentially patchable, with more restrictions being applied with each step. The commit lists are stored in `~/dbms-live-patching/commits`.
+Crawling the MariaDB commit history and selecting suitable patches is a multi-step process. Each step creates a list of commits which are potentially patchable, with more restrictions being applied with each step. The commit lists are stored in `~/dbms-live-patching/commits/`.
 
 1. Find commits patchable via Kpatch 
    - MariaDB output: `mariadb.commits.success`
@@ -50,7 +52,7 @@ Crawling the MariaDB commit history and selecting suitable patches is a multi-st
 2. Apply the MariaDB source code changes (WfPatch integration etc.) to the patchable versions
    - MariaDB output: `mariadb.commits.success.wfpatch` and `mariadb.commits.success.wfpatch.original`
    - Redis output: `redis.commits.success.wfpatch` and `redis.commits.success.wfpatch.original`
-3. Analyze MariaDB patches using perf, to identify patches that affect a specific functionality of MariaDB.
+3. Analyze MariaDB patches using `perf`, to identify patches that affect a specific functionality of MariaDB.
    - MariaDB output: ` mariadb.commits.success.wfpatch.perf.original`
 
 The following script encompasses all the commands detailed in this section, allowing the entire analysis to be executed automatically. However, it is advisable to review all the steps in this document beforehand to carefully consider the number of parallel builds, as this can significantly impact your system's performance.
@@ -69,7 +71,7 @@ export RESULT_DIR=~/dbms-live-patching/commits/reproduction
 
 ### Commits
 
-The directory `~/dbms-live-patching/commits/paper` contains the commit lists that we have crawled. Please note, the commits in `mariadb.commits.success.wfpatch.perf.paper` were selected manually from `mariadb.commits.success.wfpatch.perf.original` by checking each commit individually.
+The directory `~/dbms-live-patching/commits/paper/` contains the commit lists that we have crawled. Please note, the commits in `mariadb.commits.success.wfpatch.perf.paper` were selected manually from `mariadb.commits.success.wfpatch.perf.original` by checking each commit individually.
 
 ### 1. Find commits patchable via Kpatch
 
@@ -272,7 +274,7 @@ cp sibling.commits $RESULT_DIR/mariadb.commits.success.wfpatch.perf.original
 cd ~/dbms-live-patching/commits
 ```
 
-The `diff` script compares the commit lists crawled by us with the newly created commit lists crawled in this reproduction step. There should be no output for any of the given commit lists (except perhaps for perf).
+The `diff` script compares the commit lists we originally crawled with the newly generated commit lists from this reproduction step. Please refer to the note at the beginning regarding possible deviations in the commit lists.
 
 ```
 # Compare all commit lists
@@ -289,13 +291,13 @@ Crawling the Redis Commit History for patchable commits is used similar to Maria
 
 ## Docker Container
 
-The Docker container is designed to crawl patches independently of the VM. However, it is recommended to use the container within the VM, as the environment is fully prepared (otherwise, tracing function calls using `perf` may require some adjustments if you're using a different host system than Debian 11). For detailed information and steps on using the container, please refer to the [container](container) directory.
+The Docker container is designed to crawl patches independently of the VM. However, setting up the container may require some adjustments based on the host system's software, such as the possible unavailability of `perf` inside the Docker container. For detailed information and setup instructions, please refer to the [container](container) directory.
 
 ---
 
 ## Description
 
-The basic functionality of our pipeline for automatically finding live patches based on the development history (git history) is described here. This description applies to MariaDB and Redis..
+The basic functionality of our pipeline for automatically finding live patches based on the development history (git history) is described here. This description applies to MariaDB and Redis.
 
 ### 1. Compile & Generate Patch
 
@@ -315,10 +317,10 @@ The code changes, i.e. the implementation of the quiescence points, have to be a
 
 ### 3. Stack Tracing (MariaDB only)
 
-The final step ensures that the patched function is also in the stack trace of our quiescence points. This step was only done to select the five patches (patch ID~\#1 -- ID~\#5) for MariaDB.
+The final step ensures that the patched function is also in the stack trace of our quiescence points. This step was done to better manually select the five patches (patch ID~\#1 -- ID~\#5) for MariaDB.
 
 After applying the source code changes, we want to ensure that the patched function is at least executed and a function that is in the call stack of `do_command`. For this, we compile MariaDB with debug flags and execute it while tracing all function calls using `perf`. We execute the benchmarks NoOp, YCSB and TPC-C once to generate some load and to monitor the function paths that are executed. 
 
-Subsequently, we check whether the functions affected by the patch exists in the recorded trace data: We compare the compiled object files of the old and the new version, that make up the patch, and extract the name of all changed function names. These names are checked whether they exist in the `perf` data. Additionally, we keep only patches for which the function is at least in the call tree of `do\_command`, which finally resulted in 17 patches.
+Subsequently, we check whether the functions affected by the patch exists in the recorded trace data: We compare the compiled object files of the old and the new version, that make up the patch, and extract the name of all changed function names. These names are checked whether they exist in the `perf` data. Additionally, we keep only patches for which the function is at least in the call tree of `do_command`, which finally resulted in 17 patches.
 
 We manually reviewed all 17 patches and checked whether the commit is tracked by MariaDBs bug tracker Jira. For in total eight commits, we found a corresponding entry in Jira and six of them were of type ``Bug''. Five of the bugs affect the core of MariaDB, i.e. resulting in the patches used for our experiments.

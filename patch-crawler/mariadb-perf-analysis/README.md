@@ -1,14 +1,12 @@
-Only patches which have an affect on transaction processing are considered. We use the `do_command` function as reference to check whether the patch has an effect (patched functionality is in the call graph of `do_command`).
+# MariaDB `perf` Analysis
 
-By extracting the perf data, the following states are possible:
-- SIBLING
-    - The patched functionality is contained *only* in the `do_command` call graph.
-- SIBLING\_AND\_MORE
-    - The patched functionality is contained in the `do_command` *and other* call graphs. 
-- NO\_SIBLING
-    - The patched functionality is *not* contained in the `do_command` call graph.
-- NOT\_EXECUTED
-    - The patched functionality could *not be found* in any call graph.
+We consider only live patches that affect transaction processing. To determine if a patch has an impact, we use the `do_command` function as a reference, checking if the patched functionality is within its call graph.
 
-We continue with patches of status SIBLING and SIBLING\_AND\_MORE.
+By analyzing the performance data, we categorize the possible states as follows:
 
+- **SIBLING**: The patched functionality is contained only in the `do_command` call graph.
+- **SIBLING_AND_MORE**: The patched functionality is contained in the `do_command` and other call graphs.
+- **NO_SIBLING**: The patched functionality is not contained in the `do_command` call graph.
+- **NOT_EXECUTED**: The patched functionality could not be found in any call graph.
+
+We proceed with patches that have a status of SIBLING or SIBLING_AND_MORE.
