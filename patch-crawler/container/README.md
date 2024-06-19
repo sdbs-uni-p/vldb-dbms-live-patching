@@ -22,6 +22,6 @@ docker run --cap-add=SYS_PTRACE --privileged --tmpfs /tmp -it -d --name wfpatch-
 docker exec -it wfpatch-patch-crawler /bin/bash
 ```
 
-### Perf
+### `perf`
 
-You may need to install perf manually, depending on the host system (we assume the host system runs Debian 11 with Linux kernel 5.15.; which is the setup of the QEMU VM). If the version of the Docker container and the host OS match and the host OS has not installed a different Linux kernel, you can use perf within the Docker container. Otherwise, you may have to compile perf for your respective kernel manually. See the commands in `~/dbms-live-patching/patch-crawler/container/resources/system-setup/system-setup.d/01-perf` on how to manually install perf. Please note, the required packages may be different for different kernel versions, so these commands are not a guarantee for immediate success.
+You may need to install `perf` manually, depending on the host system (we assume the host system runs Debian 11 with Linux kernel 5.15; which is the setup of the QEMU VM). If the version of the Docker container and the host OS match and the host OS has not installed a different Linux kernel, you can use `perf` within the Docker container. Otherwise, you may have to compile `perf` for your respective kernel manually. See the commands in `~/dbms-live-patching/patch-crawler/container/resources/system-setup/system-setup.d/01-perf` on how to manually install `perf`. Please note, the required packages may be different for different kernel versions, so these commands are not a guarantee for immediate success.

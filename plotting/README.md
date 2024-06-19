@@ -15,9 +15,7 @@ sudo reboot
 
 ## Plot Directory
 
-All plots will be stored in `~/dbms-live-patching/plots/reproduction`. The directory `~/dbms-live-patching/plots/paper` contains all plots from the paper, including additional ones referenced or mentioned therein. To compare the results of your reproduction pipeline with our plots, you can use the scripts in the `~/dbms-live-patching/plots` directory.
-
-To start a web-server for easy comparison of charts, use the following commands:
+All plots will be stored in `~/dbms-live-patching/plots/reproduction`. The directory `~/dbms-live-patching/plots/paper` contains all plots from the paper, including additional ones referenced or mentioned therein. To compare the results of your reproduction pipeline with our plots, you can use the scripts in the `~/dbms-live-patching/plots` directory. To start a web-server for easy comparison of charts, use the following commands:
 
 ```bash
 cd ~/dbms-live-patching/plots
@@ -172,7 +170,7 @@ Total Patchings during all Experiments: 2900
 
 ## Original Data
 
-To analyze our benchmark data (plot charts, etc.), you can perform the following steps:
+To analyze our benchmark data, you can perform the following steps:
 
 ```
 cd ~/dbms-live-patching
@@ -187,3 +185,8 @@ vim plotting/plot/INPUT_BASE_DIRECTORY
 export INPUT_BASE_DIRECTORY=${SCRIPT_DIR}/../../transformed-data
 ```
 
+---
+
+## arXiv Plots
+
+Scripts prefixed with `arxiv-` are dedicated to generating plots for the arXiv version of the paper. These plots are larger and display all patch IDs for enhanced readability.
