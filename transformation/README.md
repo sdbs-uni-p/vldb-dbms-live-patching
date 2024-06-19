@@ -4,6 +4,9 @@ Most of our experiment data is transformed into a DuckDB database to perform bet
 
 > **_NOTE:_** It is important to use DuckDB with the ***unmodified*** Linux kernel. We have experienced unforeseen crashes of DuckDB related to the MMView Linux kernel.
 
+- Approximate **time** until all raw data is transformed: **2 hours**
+- Approximate **disk space** used for the DuckDB database files: **25 GB**
+
 ## Linux Kernel
 
 Data transformation must be executed using the ***unmodified*** Linux kernel.
