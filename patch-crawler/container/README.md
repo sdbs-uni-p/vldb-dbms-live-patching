@@ -2,13 +2,16 @@
 
 Docker container to crawl the development history of MariaDB and Redis for live patchable commits.
 
-You can either execute `docker-build` first and than `run-container` or you may execute the following commands manually:
+You have two options to get a Docker image: either build it yourself using docker-build or download a pre-built image using download-pre-built-image. Once the image is ready, you can start a Docker container using run-container. Alternatively, you can manually execute the corresponding commands as follows:
 
 ```
 cd ~/dbms-live-patching/patch-crawler/container
 
-# 1. Build Docker image:
+# 1. Build Docker image
 docker build -t patch-crawler .
+# or download pre-built image from Zenodo
+docker image import https://zenodo.org/records/12166690/files/docker-image-patch-crawler.tar.xz
+docker tag d1a5d958027d patch-crawler:latest
 
 # 2. Prepare host system and enable tracing of events:
 sudo su -c "echo -1 > /proc/sys/kernel/perf_event_paranoid"
